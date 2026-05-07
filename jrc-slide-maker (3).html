@@ -1,0 +1,2758 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>JRC スライドメーカー</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --red: #d4001a;
+    --red-dark: #a30015;
+    --red-soft: #fff0f1;
+    --red-pale: #fef7f8;
+    --ink: #1a1a1a;
+    --gray-1: #f5f5f7;
+    --gray-2: #e5e5ea;
+    --gray-3: #c7c7cc;
+    --gray-text: #6c6c70;
+    --shadow-card: 0 2px 8px rgba(0,0,0,0.06);
+    --shadow-elev: 0 4px 16px rgba(0,0,0,0.1);
+    --safe-bottom: env(safe-area-inset-bottom);
+
+    /* テーマカラー(初期値: シンプル赤) */
+    --theme-primary: #d4001a;
+    --theme-primary-dark: #a30015;
+    --theme-primary-soft: #fff0f1;
+    --theme-primary-pale: #fef7f8;
+    --theme-secondary: #d4001a;
+    --theme-bg-gradient: linear-gradient(135deg, white 0%, #fef7f8 100%);
+    --theme-emoji: '♡';
+  }
+
+  /* ===== テーマ: 3年生を送る会(桜・ピンク) ===== */
+  body.theme-soubetsu {
+    --theme-primary: #e8889a;
+    --theme-primary-dark: #c66878;
+    --theme-primary-soft: #fff0f4;
+    --theme-primary-pale: #fff8fa;
+    --theme-secondary: #ffd1dc;
+    --theme-bg-gradient: linear-gradient(135deg, #fff8fa 0%, #ffe8ee 100%);
+  }
+
+  /* ===== テーマ: クリスマス会(赤・緑) ===== */
+  body.theme-christmas {
+    --theme-primary: #c8102e;
+    --theme-primary-dark: #970b1f;
+    --theme-primary-soft: #fff0f1;
+    --theme-primary-pale: #fef7f8;
+    --theme-secondary: #2d8f3a;
+    --theme-bg-gradient: linear-gradient(135deg, #fff8f5 0%, #f0f8f0 100%);
+  }
+
+  /* ===== テーマ: 新年会(金・赤・和) ===== */
+  body.theme-shinnen {
+    --theme-primary: #b8860b;
+    --theme-primary-dark: #8b6508;
+    --theme-primary-soft: #fff8e1;
+    --theme-primary-pale: #fffbf0;
+    --theme-secondary: #c8102e;
+    --theme-bg-gradient: linear-gradient(135deg, #fffbf0 0%, #fff5d6 100%);
+  }
+
+  /* ===== テーマ: MTC夏合宿(水・オレンジ) ===== */
+  body.theme-mtc {
+    --theme-primary: #2196d4;
+    --theme-primary-dark: #1976a8;
+    --theme-primary-soft: #e6f4fc;
+    --theme-primary-pale: #f0f9fd;
+    --theme-secondary: #ff8c42;
+    --theme-bg-gradient: linear-gradient(135deg, #e6f4fc 0%, #fff0e0 100%);
+  }
+
+  /* ===== テーマ: 新入生歓迎会(藤・黄) ===== */
+  body.theme-kangei {
+    --theme-primary: #9966cc;
+    --theme-primary-dark: #774a99;
+    --theme-primary-soft: #f0e6f7;
+    --theme-primary-pale: #f8f3fc;
+    --theme-secondary: #ffd700;
+    --theme-bg-gradient: linear-gradient(135deg, #f8f3fc 0%, #fff9e0 100%);
+  }
+
+  html, body {
+    font-family: 'BIZ UDPGothic', -apple-system, 'Hiragino Sans', sans-serif;
+    background: var(--gray-1);
+    color: var(--ink);
+    line-height: 1.6;
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    overscroll-behavior: none;
+  }
+
+  /* ========== トップヘッダー(タイトル+保存) ========== */
+  .top-header {
+    position: sticky; top: 0;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    padding: 14px 20px;
+    display: flex; align-items: center; gap: 12px;
+    z-index: 100;
+    border-bottom: 0.5px solid var(--gray-2);
+  }
+  .header-logo {
+    width: 32px; height: 32px;
+    background: var(--red);
+    border-radius: 8px;
+    flex-shrink: 0;
+    position: relative;
+    box-shadow: 0 2px 6px rgba(212,0,26,0.3);
+  }
+  .header-logo::before {
+    content: '♡';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .header-title { flex: 1; min-width: 0; }
+  .header-title h1 { font-size: 16px; font-weight: 700; line-height: 1.2; }
+  .header-title p { font-size: 11px; color: var(--gray-text); }
+
+  .header-action {
+    background: var(--red);
+    color: white;
+    border: none;
+    padding: 9px 16px;
+    border-radius: 100px;
+    font-family: inherit;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(212,0,26,0.25);
+    transition: transform 0.1s, background 0.15s;
+  }
+  .header-action:active { background: var(--red-dark); transform: scale(0.96); }
+  .header-action-secondary {
+    background: white;
+    color: var(--ink);
+    border: 1.5px solid var(--gray-2);
+    padding: 9px 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .header-action-secondary:active { background: var(--gray-1); }
+
+  /* ========== 書き出しモーダル ========== */
+  .export-modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 4000;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    animation: fadeIn 0.2s;
+  }
+  .export-modal.show { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .export-sheet {
+    background: white;
+    width: 100%;
+    max-width: 520px;
+    border-radius: 20px 20px 0 0;
+    padding: 12px 20px calc(28px + var(--safe-bottom));
+    animation: slideUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .export-handle {
+    width: 40px; height: 4px;
+    background: var(--gray-3);
+    border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+  .export-title { font-size: 18px; font-weight: 700; text-align: center; margin-bottom: 4px; }
+  .export-desc { font-size: 13px; color: var(--gray-text); text-align: center; margin-bottom: 18px; }
+  .export-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .export-card {
+    background: white;
+    border: 2px solid var(--gray-2);
+    border-radius: 14px;
+    padding: 14px 10px;
+    cursor: pointer;
+    transition: transform 0.1s, border-color 0.15s, background 0.15s;
+    font-family: inherit;
+    text-align: center;
+  }
+  .export-card:active {
+    transform: scale(0.97);
+    border-color: var(--theme-primary, var(--red));
+    background: var(--theme-primary-pale, var(--red-pale));
+  }
+  .export-card-wide { grid-column: 1 / -1; }
+  .export-icon { font-size: 28px; margin-bottom: 6px; line-height: 1; }
+  .export-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .export-meta { font-size: 11px; color: var(--gray-text); }
+  .export-cancel {
+    width: 100%;
+    background: var(--gray-1);
+    color: var(--ink);
+    border: none;
+    padding: 13px;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer;
+  }
+  .export-cancel:active { background: var(--gray-2); }
+
+  /* 書き出し進捗 */
+  .export-progress {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 5000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .export-progress.show { display: flex; }
+  .export-progress-box {
+    background: white;
+    border-radius: 16px;
+    padding: 24px 28px;
+    min-width: 240px;
+    text-align: center;
+  }
+  .export-progress-spinner {
+    width: 40px; height: 40px;
+    margin: 0 auto 14px;
+    border: 4px solid var(--gray-2);
+    border-top-color: var(--red);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .export-progress-text { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+  .export-progress-bar {
+    width: 100%; height: 6px;
+    background: var(--gray-2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .export-progress-fill {
+    height: 100%;
+    background: var(--red);
+    width: 0%;
+    transition: width 0.2s;
+  }
+
+  /* ========== コンテンツエリア ========== */
+  .page {
+    display: none;
+    padding: 16px;
+    padding-bottom: calc(90px + var(--safe-bottom));
+    max-width: 720px; margin: 0 auto;
+  }
+  .page.active { display: block; }
+
+  /* セクションラベル(iOS設定アプリ風) */
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--gray-text);
+    padding: 16px 14px 6px;
+  }
+
+  /* グループカード(iOS設定アプリ風) */
+  .group {
+    background: white;
+    border-radius: 14px;
+    margin-bottom: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+  }
+  .group-row {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 0.5px solid var(--gray-2);
+    gap: 12px;
+    min-height: 54px;
+  }
+  .group-row:last-child { border-bottom: none; }
+  .group-row .row-label {
+    flex-shrink: 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    min-width: 80px;
+  }
+  .group-row input[type="text"], .group-row input[type="time"] {
+    flex: 1; min-width: 0;
+    border: none;
+    padding: 6px 0;
+    font-size: 16px;
+    font-family: inherit;
+    color: var(--ink);
+    background: transparent;
+    text-align: right;
+    -webkit-appearance: none;
+  }
+  .group-row input[type="text"]::placeholder { color: var(--gray-3); }
+  .group-row input[type="text"]:focus, .group-row input[type="time"]:focus { outline: none; }
+  .group-row input[type="time"] {
+    color: var(--red);
+    font-weight: 700;
+    text-align: right;
+    min-height: 32px;
+  }
+
+  /* グループ単独入力(縦) */
+  .group-stack {
+    padding: 14px 16px;
+  }
+  .group-stack label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gray-text);
+    margin-bottom: 6px;
+  }
+  .group-stack input[type="text"], .group-stack textarea {
+    width: 100%;
+    border: none;
+    padding: 4px 0;
+    font-size: 16px;
+    font-family: inherit;
+    background: transparent;
+    color: var(--ink);
+    -webkit-appearance: none;
+    line-height: 1.5;
+  }
+  .group-stack textarea {
+    min-height: 70px;
+    resize: vertical;
+  }
+  .group-stack input:focus, .group-stack textarea:focus { outline: none; }
+
+  /* トグル(iOS風) */
+  .toggle {
+    position: relative;
+    width: 51px; height: 31px;
+    background: var(--gray-3);
+    border-radius: 31px;
+    cursor: pointer;
+    transition: background 0.25s;
+    flex-shrink: 0;
+  }
+  .toggle.on { background: #34c759; }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 27px; height: 27px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.25s;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+  }
+  .toggle.on::after { transform: translateX(20px); }
+
+  /* セクション説明 */
+  .section-help {
+    font-size: 12px;
+    color: var(--gray-text);
+    padding: 6px 14px 0;
+    line-height: 1.5;
+  }
+
+  /* ========== プログラム編集 ========== */
+  /* 開始時刻のハイライトカード */
+  .start-time-card {
+    background: linear-gradient(135deg, var(--red), var(--red-dark));
+    color: white;
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 4px 12px rgba(212,0,26,0.25);
+  }
+  .start-time-card .clock-icon {
+    font-size: 22px;
+    width: 40px; height: 40px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .start-time-card .info { flex: 1; min-width: 0; }
+  .start-time-card .info-label { font-size: 12px; opacity: 0.9; }
+  .start-time-card .info-value { font-size: 15px; font-weight: 700; }
+  .start-time-card input[type="time"] {
+    border: none;
+    background: white;
+    color: var(--red);
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    font-family: inherit;
+    -webkit-appearance: none;
+    text-align: center;
+    width: 110px;
+  }
+
+  /* プログラム項目カード */
+  .prog-card {
+    background: white;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: var(--shadow-card);
+    transition: transform 0.1s;
+  }
+  .prog-card:active { transform: scale(0.99); }
+  .prog-card .time-pill {
+    flex-shrink: 0;
+    background: var(--red-pale);
+    color: var(--red);
+    padding: 8px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-align: center;
+    min-width: 72px;
+  }
+  .prog-card .time-pill .arrow {
+    font-size: 9px;
+    color: var(--red);
+    opacity: 0.5;
+    display: block;
+    margin: 1px 0;
+  }
+  .prog-card .name-input {
+    flex: 1; min-width: 0;
+    border: none;
+    padding: 8px 0;
+    font-size: 16px;
+    font-family: inherit;
+    background: transparent;
+    color: var(--ink);
+    -webkit-appearance: none;
+  }
+  .prog-card .name-input:focus { outline: none; }
+  .prog-card .name-input::placeholder { color: var(--gray-3); }
+
+  .prog-card .min-control {
+    display: flex;
+    align-items: center;
+    background: var(--gray-1);
+    border-radius: 12px;
+    padding: 4px;
+    flex-shrink: 0;
+  }
+  .prog-card .step-btn {
+    width: 32px; height: 32px;
+    border: none;
+    background: white;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--red);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    font-family: inherit;
+  }
+  .prog-card .step-btn:active { background: var(--red-pale); }
+  .prog-card .min-input {
+    width: 44px;
+    border: none;
+    background: transparent;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    font-family: inherit;
+    padding: 0 4px;
+    -webkit-appearance: none;
+  }
+  .prog-card .min-input:focus { outline: none; }
+  .prog-card .min-input::-webkit-outer-spin-button,
+  .prog-card .min-input::-webkit-inner-spin-button {
+    -webkit-appearance: none; margin: 0;
+  }
+  .prog-card .min-suffix {
+    font-size: 11px;
+    color: var(--gray-text);
+    margin-left: 2px;
+    margin-right: 4px;
+  }
+
+  .prog-card .del-btn {
+    flex-shrink: 0;
+    width: 32px; height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--gray-3);
+    font-size: 22px;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    padding: 0;
+  }
+  .prog-card .del-btn:active {
+    background: var(--red-soft);
+    color: var(--red);
+  }
+
+  /* 日付区切りカード */
+  .day-card {
+    background: linear-gradient(90deg, white 0%, var(--red-pale) 50%, white 100%);
+    border: 1.5px dashed var(--red);
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .day-card .day-icon { font-size: 18px; }
+  .day-card input {
+    flex: 1; min-width: 0;
+    border: none;
+    background: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--red);
+    font-family: inherit;
+    -webkit-appearance: none;
+  }
+  .day-card input:focus { outline: none; box-shadow: 0 0 0 2px var(--red-soft); }
+  .day-card .del-btn {
+    width: 28px; height: 28px;
+    border: none;
+    background: white;
+    color: var(--gray-3);
+    font-size: 18px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  /* ページ分割の目印 */
+  .page-divider {
+    text-align: center;
+    font-size: 11px;
+    color: var(--gray-3);
+    padding: 8px 0;
+    position: relative;
+  }
+  .page-divider::before, .page-divider::after {
+    content: '';
+    position: absolute; top: 50%;
+    width: 25%; height: 1px;
+    background: var(--gray-2);
+  }
+  .page-divider::before { left: 10%; }
+  .page-divider::after { right: 10%; }
+
+  /* FAB(浮かんでる追加ボタン) */
+  .fab-group {
+    display: flex;
+    gap: 10px;
+    margin: 16px 0 8px;
+  }
+  .fab-btn {
+    flex: 1;
+    background: white;
+    border: none;
+    padding: 14px;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--shadow-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: var(--ink);
+    transition: transform 0.1s;
+  }
+  .fab-btn:active { transform: scale(0.97); }
+  .fab-btn.primary {
+    background: var(--red);
+    color: white;
+    box-shadow: 0 4px 12px rgba(212,0,26,0.25);
+  }
+  .fab-btn .icon {
+    font-size: 16px;
+  }
+
+  /* ========== 本文編集カード ========== */
+  .content-card {
+    background: white;
+    border-radius: 14px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+  }
+  .content-card-header {
+    padding: 12px 16px;
+    background: var(--red-pale);
+    border-bottom: 0.5px solid var(--red-soft);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .content-card-header .title {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--ink);
+    flex: 1;
+    min-width: 0;
+  }
+  .content-card-header .day-tag {
+    font-size: 10px;
+    background: var(--red);
+    color: white;
+    padding: 3px 9px;
+    border-radius: 100px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .content-card textarea {
+    width: 100%;
+    border: none;
+    padding: 14px 16px;
+    font-size: 16px;
+    font-family: inherit;
+    background: transparent;
+    color: var(--ink);
+    line-height: 1.6;
+    resize: vertical;
+    min-height: 80px;
+    -webkit-appearance: none;
+  }
+  .content-card textarea:focus { outline: none; }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--gray-text);
+  }
+  .empty-state .emoji {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+  }
+  .empty-state p { font-size: 14px; }
+
+  /* ========== 下タブナビ ========== */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: white;
+    border-top: 1px solid var(--gray-2);
+    display: flex;
+    z-index: 100;
+    padding-bottom: var(--safe-bottom);
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+  }
+  .nav-item {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 10px 4px 8px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--gray-text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    position: relative;
+    transition: color 0.15s;
+  }
+  /* タブ間の区切り線 */
+  .nav-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 20%; bottom: 20%;
+    width: 1px;
+    background: var(--gray-2);
+  }
+  /* アクティブタブの上に赤いバー */
+  .nav-item::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%) scaleX(0);
+    width: 50%;
+    height: 3px;
+    background: var(--red);
+    border-radius: 0 0 3px 3px;
+    transition: transform 0.2s;
+  }
+  .nav-item.active { color: var(--red); }
+  .nav-item.active::before {
+    transform: translateX(-50%) scaleX(1);
+  }
+  .nav-item.active {
+    background: var(--red-pale);
+  }
+  .nav-item:active {
+    background: var(--gray-1);
+  }
+  .nav-item .nav-icon {
+    width: 28px; height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    line-height: 1;
+  }
+  .nav-item .nav-label {
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .nav-item.active .nav-label { font-weight: 700; }
+
+  /* ========== スライド表示 ========== */
+  .slide-mode {
+    display: none;
+    position: fixed; inset: 0;
+    background: white;
+    z-index: 1000;
+  }
+  .slide-mode.active { display: flex; flex-direction: column; }
+  .slide-controls {
+    position: fixed; top: 16px; right: 16px;
+    display: flex; gap: 8px; z-index: 1010;
+  }
+  .icon-btn-circle {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.95);
+    cursor: pointer;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .slide-stage {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    background: white;
+  }
+  .slide {
+    width: 100%; height: 100%;
+    background: white;
+    display: flex; flex-direction: column;
+    padding: 6vh 5vw;
+    position: relative; overflow: hidden;
+  }
+  .slide.with-accent::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--theme-primary) 0%, var(--theme-primary) 60%, white 60%, white 100%);
+  }
+  .slide.with-accent::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, white 0%, white 40%, var(--theme-primary) 40%, var(--theme-primary) 100%);
+  }
+  .slide.title-slide {
+    align-items: center; justify-content: center;
+    text-align: center;
+    background: var(--theme-bg-gradient);
+  }
+  .slide.title-slide .heart-mark {
+    width: clamp(80px, 10vw, 130px);
+    height: clamp(80px, 10vw, 130px);
+    background: var(--theme-primary);
+    border-radius: 16px;
+    margin-bottom: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: clamp(48px, 6vw, 80px);
+    line-height: 1;
+    box-shadow: 0 8px 24px var(--theme-primary-soft);
+  }
+  .slide.title-slide .big-title {
+    font-size: clamp(48px, 9vw, 110px);
+    font-weight: 700; line-height: 1.4;
+    margin-bottom: 16px;
+    letter-spacing: 0.04em;
+  }
+  .slide.title-slide .date {
+    position: absolute; bottom: 36px;
+    left: 50%; transform: translateX(-50%);
+    font-size: clamp(18px, 2.4vw, 28px);
+    color: var(--gray-text);
+  }
+  .slide.chapter-slide {
+    align-items: center; justify-content: center; text-align: center;
+  }
+  .slide.chapter-slide .chapter-bar {
+    width: 80px; height: 5px;
+    background: var(--theme-primary);
+    margin-bottom: 32px; border-radius: 3px;
+  }
+  .slide.chapter-slide .chapter-title {
+    font-size: clamp(64px, 11vw, 130px);
+    font-weight: 700; letter-spacing: 0.04em;
+  }
+  .slide.program-slide { padding-top: 8vh; }
+  .slide.program-slide h2 {
+    font-size: clamp(40px, 6vw, 72px);
+    text-align: center; margin-bottom: 8px;
+    letter-spacing: 0.04em;
+  }
+  .slide.program-slide .day-subtitle {
+    text-align: center;
+    font-size: clamp(20px, 3vw, 36px);
+    font-weight: 700; color: var(--theme-primary);
+    margin-bottom: 32px;
+  }
+  .slide.program-slide .day-subtitle::before { content: '── '; opacity: 0.6; }
+  .slide.program-slide .day-subtitle::after { content: ' ──'; opacity: 0.6; }
+  .program-list { max-width: 92%; margin: 0 auto; width: 100%; }
+  .program-item {
+    display: flex; align-items: center; gap: 20px;
+    margin-bottom: 14px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 2px solid transparent;
+  }
+  .program-item .time-badge {
+    background: var(--theme-primary); color: white;
+    padding: 8px 18px;
+    border-radius: 24px;
+    font-weight: 700;
+    font-size: clamp(20px, 2.6vw, 30px);
+    flex-shrink: 0;
+    min-width: 200px;
+    text-align: center;
+  }
+  .program-item .name {
+    font-size: clamp(28px, 4vw, 46px);
+    font-weight: 500;
+  }
+  .program-item.highlight {
+    border-color: var(--theme-primary);
+    background: var(--theme-primary-pale);
+  }
+  .program-item.highlight .time-badge { background: var(--theme-primary-dark); }
+
+  .slide.content-slide { padding-top: 8vh; }
+  .slide.content-slide h2 {
+    font-size: clamp(36px, 5vw, 60px);
+    text-align: center; margin-bottom: 24px;
+    letter-spacing: 0.04em;
+  }
+  .slide.content-slide .h2-bar {
+    width: 60px; height: 4px;
+    background: var(--theme-primary);
+    margin: 0 auto 32px; border-radius: 2px;
+  }
+  .slide.content-slide .body {
+    font-size: clamp(26px, 3.8vw, 42px);
+    line-height: 2.2;
+    max-width: 90%; margin: 0 auto;
+  }
+  .slide.content-slide ul { list-style: none; }
+  .slide.content-slide li {
+    padding-left: 40px; position: relative;
+    margin-bottom: 14px;
+  }
+  .slide.content-slide li::before {
+    content: '';
+    position: absolute; left: 8px; top: 0.7em;
+    width: 14px; height: 14px;
+    background: var(--theme-primary); border-radius: 3px;
+  }
+
+  /* テーマ装飾アクセント(オプショナル) */
+
+  /* ===== 共通:タイトルスライドの背景レイヤー初期化 ===== */
+  body[class*="theme-"] .slide.title-slide::before { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+  body[class*="theme-"] .slide.title-slide > * { position: relative; z-index: 1; }
+
+  /* ============================================================ */
+  /* 🌸 3年生を送る会:桜テーマ                                   */
+  /* ============================================================ */
+  /* 全スライドに薄く整然と桜を配置 */
+  body.theme-soubetsu .slide {
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'><defs><g id='sk' fill='%23ffb7c5'><path d='M0,-3 C-5,-15 -10,-19 -6,-22 C-3,-23 -1,-22 0,-20 C1,-22 3,-23 6,-22 C10,-19 5,-15 0,-3 Z'/><path d='M0,-3 C-5,-15 -10,-19 -6,-22 C-3,-23 -1,-22 0,-20 C1,-22 3,-23 6,-22 C10,-19 5,-15 0,-3 Z' transform='rotate(72)'/><path d='M0,-3 C-5,-15 -10,-19 -6,-22 C-3,-23 -1,-22 0,-20 C1,-22 3,-23 6,-22 C10,-19 5,-15 0,-3 Z' transform='rotate(144)'/><path d='M0,-3 C-5,-15 -10,-19 -6,-22 C-3,-23 -1,-22 0,-20 C1,-22 3,-23 6,-22 C10,-19 5,-15 0,-3 Z' transform='rotate(216)'/><path d='M0,-3 C-5,-15 -10,-19 -6,-22 C-3,-23 -1,-22 0,-20 C1,-22 3,-23 6,-22 C10,-19 5,-15 0,-3 Z' transform='rotate(288)'/><circle r='2.5' fill='%23ff8aa8'/></g></defs><g opacity='0.18'><use href='%23sk' transform='translate(45,45)'/><use href='%23sk' transform='translate(135,135) rotate(36)'/></g></svg>");
+    background-size: 360px 360px;
+    background-repeat: repeat;
+  }
+  /* タイトルスライドは大きい桜+枝 */
+  body.theme-soubetsu .slide.title-slide {
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><g><path d='M-20 80 Q60 110 140 90 Q220 75 300 95' stroke='%23a07a65' stroke-width='3' fill='none' opacity='0.55' stroke-linecap='round'/><path d='M40 90 Q48 78 60 84' stroke='%23a07a65' stroke-width='1.8' fill='none' opacity='0.5' stroke-linecap='round'/><path d='M120 88 Q130 76 142 82' stroke='%23a07a65' stroke-width='1.8' fill='none' opacity='0.5' stroke-linecap='round'/><path d='M210 84 Q220 72 232 78' stroke='%23a07a65' stroke-width='1.8' fill='none' opacity='0.5' stroke-linecap='round'/></g><defs><g id='bigsakura' fill='%23ffb7c5'><path d='M0,-4 C-7,-22 -14,-28 -8,-32 C-4,-34 -2,-32 0,-30 C2,-32 4,-34 8,-32 C14,-28 7,-22 0,-4 Z'/><path d='M0,-4 C-7,-22 -14,-28 -8,-32 C-4,-34 -2,-32 0,-30 C2,-32 4,-34 8,-32 C14,-28 7,-22 0,-4 Z' transform='rotate(72)'/><path d='M0,-4 C-7,-22 -14,-28 -8,-32 C-4,-34 -2,-32 0,-30 C2,-32 4,-34 8,-32 C14,-28 7,-22 0,-4 Z' transform='rotate(144)'/><path d='M0,-4 C-7,-22 -14,-28 -8,-32 C-4,-34 -2,-32 0,-30 C2,-32 4,-34 8,-32 C14,-28 7,-22 0,-4 Z' transform='rotate(216)'/><path d='M0,-4 C-7,-22 -14,-28 -8,-32 C-4,-34 -2,-32 0,-30 C2,-32 4,-34 8,-32 C14,-28 7,-22 0,-4 Z' transform='rotate(288)'/><circle r='4' fill='%23ff8aa8'/></g></defs><g opacity='0.92'><use href='%23bigsakura' transform='translate(45,82) rotate(-15)'/><use href='%23bigsakura' transform='translate(125,86) rotate(20) scale(0.9)'/><use href='%23bigsakura' transform='translate(215,80) rotate(-8) scale(0.85)'/><use href='%23bigsakura' transform='translate(85,55) rotate(35) scale(0.6)'/><use href='%23bigsakura' transform='translate(175,108) rotate(-30) scale(0.55)'/></g></svg>"),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><g><path d='M420 220 Q340 250 260 230 Q180 215 100 235' stroke='%23a07a65' stroke-width='3' fill='none' opacity='0.55' stroke-linecap='round'/></g><defs><g id='bigsakura2' fill='%23ffb7c5'><path d='M0,-4 C-7,-22 -14,-28 -8,-32 C-4,-34 -2,-32 0,-30 C2,-32 4,-34 8,-32 C14,-28 7,-22 0,-4 Z'/><path d='M0,-4 C-7,-22 -14,-28 -8,-32 C-4,-34 -2,-32 0,-30 C2,-32 4,-34 8,-32 C14,-28 7,-22 0,-4 Z' transform='rotate(72)'/><path d='M0,-4 C-7,-22 -14,-28 -8,-32 C-4,-34 -2,-32 0,-30 C2,-32 4,-34 8,-32 C14,-28 7,-22 0,-4 Z' transform='rotate(144)'/><path d='M0,-4 C-7,-22 -14,-28 -8,-32 C-4,-34 -2,-32 0,-30 C2,-32 4,-34 8,-32 C14,-28 7,-22 0,-4 Z' transform='rotate(216)'/><path d='M0,-4 C-7,-22 -14,-28 -8,-32 C-4,-34 -2,-32 0,-30 C2,-32 4,-34 8,-32 C14,-28 7,-22 0,-4 Z' transform='rotate(288)'/><circle r='4' fill='%23ff8aa8'/></g></defs><g opacity='0.92'><use href='%23bigsakura2' transform='translate(355,222) rotate(15)'/><use href='%23bigsakura2' transform='translate(275,228) rotate(-20) scale(0.9)'/><use href='%23bigsakura2' transform='translate(185,222) rotate(8) scale(0.85)'/><use href='%23bigsakura2' transform='translate(315,250) rotate(35) scale(0.6)'/></g></svg>"),
+      var(--theme-bg-gradient);
+    background-position: top left, bottom right, center;
+    background-size: 50% auto, 50% auto, cover;
+    background-repeat: no-repeat, no-repeat, no-repeat;
+  }
+  body.theme-soubetsu .slide.title-slide::before {
+    background-image:
+      radial-gradient(circle at 20% 35%, rgba(255,183,197,0.35) 0, rgba(255,183,197,0) 10px),
+      radial-gradient(circle at 80% 25%, rgba(255,158,181,0.35) 0, rgba(255,158,181,0) 8px),
+      radial-gradient(circle at 65% 75%, rgba(255,183,197,0.35) 0, rgba(255,183,197,0) 10px);
+  }
+  /* 章タイトル両端に桜 */
+  body.theme-soubetsu .slide.chapter-slide .chapter-title { position: relative; display: inline-block; }
+  body.theme-soubetsu .slide.chapter-slide .chapter-title::before,
+  body.theme-soubetsu .slide.chapter-slide .chapter-title::after {
+    content: '🌸';
+    font-size: 0.55em; opacity: 0.85;
+    vertical-align: middle; display: inline-block;
+  }
+  body.theme-soubetsu .slide.chapter-slide .chapter-title::before { margin-right: 0.35em; transform: rotate(-12deg); }
+  body.theme-soubetsu .slide.chapter-slide .chapter-title::after  { margin-left: 0.35em;  transform: rotate(12deg); }
+  /* 本文・プログラムは右上に桜枝 */
+  body.theme-soubetsu .slide.content-slide,
+  body.theme-soubetsu .slide.program-slide {
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'><defs><g id='sk2' fill='%23ffb7c5'><path d='M0,-3 C-5,-15 -10,-19 -6,-22 C-3,-23 -1,-22 0,-20 C1,-22 3,-23 6,-22 C10,-19 5,-15 0,-3 Z'/><path d='M0,-3 C-5,-15 -10,-19 -6,-22 C-3,-23 -1,-22 0,-20 C1,-22 3,-23 6,-22 C10,-19 5,-15 0,-3 Z' transform='rotate(72)'/><path d='M0,-3 C-5,-15 -10,-19 -6,-22 C-3,-23 -1,-22 0,-20 C1,-22 3,-23 6,-22 C10,-19 5,-15 0,-3 Z' transform='rotate(144)'/><path d='M0,-3 C-5,-15 -10,-19 -6,-22 C-3,-23 -1,-22 0,-20 C1,-22 3,-23 6,-22 C10,-19 5,-15 0,-3 Z' transform='rotate(216)'/><path d='M0,-3 C-5,-15 -10,-19 -6,-22 C-3,-23 -1,-22 0,-20 C1,-22 3,-23 6,-22 C10,-19 5,-15 0,-3 Z' transform='rotate(288)'/><circle r='2.5' fill='%23ff8aa8'/></g></defs><g opacity='0.18'><use href='%23sk2' transform='translate(45,45)'/><use href='%23sk2' transform='translate(135,135) rotate(36)'/></g></svg>"),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 200'><g><path d='M320 30 Q260 12 200 35 Q160 50 130 38' stroke='%23a07a65' stroke-width='2.2' fill='none' opacity='0.55' stroke-linecap='round'/></g><defs><g id='sb3' fill='%23ffb7c5'><path d='M0,-3 C-6,-18 -12,-23 -7,-26 C-3,-28 -1,-26 0,-24 C1,-26 3,-28 7,-26 C12,-23 6,-18 0,-3 Z'/><path d='M0,-3 C-6,-18 -12,-23 -7,-26 C-3,-28 -1,-26 0,-24 C1,-26 3,-28 7,-26 C12,-23 6,-18 0,-3 Z' transform='rotate(72)'/><path d='M0,-3 C-6,-18 -12,-23 -7,-26 C-3,-28 -1,-26 0,-24 C1,-26 3,-28 7,-26 C12,-23 6,-18 0,-3 Z' transform='rotate(144)'/><path d='M0,-3 C-6,-18 -12,-23 -7,-26 C-3,-28 -1,-26 0,-24 C1,-26 3,-28 7,-26 C12,-23 6,-18 0,-3 Z' transform='rotate(216)'/><path d='M0,-3 C-6,-18 -12,-23 -7,-26 C-3,-28 -1,-26 0,-24 C1,-26 3,-28 7,-26 C12,-23 6,-18 0,-3 Z' transform='rotate(288)'/><circle r='3' fill='%23ff8aa8'/></g></defs><g opacity='0.85'><use href='%23sb3' transform='translate(265,30) rotate(15)'/><use href='%23sb3' transform='translate(220,38) rotate(-20) scale(0.85)'/><use href='%23sb3' transform='translate(175,32) rotate(8) scale(0.75)'/><use href='%23sb3' transform='translate(140,42) rotate(30) scale(0.6)'/></g></svg>");
+    background-position: top left, top right;
+    background-size: 360px 360px, 35% auto;
+    background-repeat: repeat, no-repeat;
+  }
+  /* 箇条書きを花びらに */
+  body.theme-soubetsu .slide.content-slide li::before {
+    content: '❀';
+    background: transparent; width: auto; height: auto;
+    color: var(--theme-primary);
+    font-size: 1.2em; line-height: 1;
+    top: 0.55em; left: 4px;
+  }
+
+  /* ============================================================ */
+  /* 🎄 クリスマス会:雪結晶+ベル                                   */
+  /* ============================================================ */
+  /* 全スライドに薄い雪の結晶が散った背景 */
+  body.theme-christmas .slide {
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'><defs><g id='snow' stroke='%232d8f3a' stroke-width='1.2' fill='none' stroke-linecap='round'><line x1='0' y1='-10' x2='0' y2='10'/><line x1='-10' y1='0' x2='10' y2='0'/><line x1='-7' y1='-7' x2='7' y2='7'/><line x1='-7' y1='7' x2='7' y2='-7'/><path d='M0,-8 L-2,-6 M0,-8 L2,-6 M0,8 L-2,6 M0,8 L2,6 M-8,0 L-6,-2 M-8,0 L-6,2 M8,0 L6,-2 M8,0 L6,2'/></g></defs><g opacity='0.3'><use href='%23snow' transform='translate(40,40)'/><use href='%23snow' transform='translate(150,60) scale(0.8)'/><use href='%23snow' transform='translate(80,140) scale(0.7)'/><use href='%23snow' transform='translate(170,160) scale(0.9)'/></g></svg>");
+    background-size: 220px 220px;
+    background-repeat: repeat;
+  }
+  body.theme-christmas .slide.title-slide {
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><defs><g id='bigsnow' stroke='%23c8102e' stroke-width='2' fill='none' stroke-linecap='round'><line x1='0' y1='-25' x2='0' y2='25'/><line x1='-25' y1='0' x2='25' y2='0'/><line x1='-18' y1='-18' x2='18' y2='18'/><line x1='-18' y1='18' x2='18' y2='-18'/><path d='M0,-20 L-5,-15 M0,-20 L5,-15 M0,20 L-5,15 M0,20 L5,15 M-20,0 L-15,-5 M-20,0 L-15,5 M20,0 L15,-5 M20,0 L15,5 M-14,-14 L-12,-10 M-14,-14 L-10,-12 M14,14 L12,10 M14,14 L10,12 M-14,14 L-12,10 M-14,14 L-10,12 M14,-14 L12,-10 M14,-14 L10,-12'/></g></defs><g opacity='0.7'><use href='%23bigsnow' transform='translate(60,80)'/><use href='%23bigsnow' transform='translate(340,90) scale(0.85)'/><use href='%23bigsnow' transform='translate(80,220) scale(0.75)'/></g></svg>"),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><g transform='translate(310,210)'><path d='M0,-30 Q-25,-30 -28,-5 L-30,15 Q-30,20 -25,22 L25,22 Q30,20 30,15 L28,-5 Q25,-30 0,-30 Z' fill='%232d8f3a' opacity='0.85'/><path d='M-20,18 Q-15,28 0,30 Q15,28 20,18 Z' fill='%23ffd700' opacity='0.9'/><circle cx='0' cy='35' r='4' fill='%23c8102e'/></g></svg>"),
+      var(--theme-bg-gradient);
+    background-position: top left, bottom right, center;
+    background-size: 45% auto, 30% auto, cover;
+    background-repeat: no-repeat, no-repeat, no-repeat;
+  }
+  body.theme-christmas .slide.title-slide::before {
+    background-image:
+      radial-gradient(circle at 25% 30%, rgba(255,255,255,0.5) 0, rgba(255,255,255,0) 6px),
+      radial-gradient(circle at 70% 40%, rgba(255,255,255,0.5) 0, rgba(255,255,255,0) 5px),
+      radial-gradient(circle at 50% 80%, rgba(255,255,255,0.5) 0, rgba(255,255,255,0) 6px),
+      radial-gradient(circle at 85% 70%, rgba(255,255,255,0.5) 0, rgba(255,255,255,0) 4px);
+  }
+  body.theme-christmas .slide.chapter-slide .chapter-title { position: relative; display: inline-block; }
+  body.theme-christmas .slide.chapter-slide .chapter-title::before,
+  body.theme-christmas .slide.chapter-slide .chapter-title::after {
+    content: '❄'; font-size: 0.55em; opacity: 0.85;
+    color: var(--theme-secondary);
+    vertical-align: middle; display: inline-block;
+  }
+  body.theme-christmas .slide.chapter-slide .chapter-title::before { margin-right: 0.35em; }
+  body.theme-christmas .slide.chapter-slide .chapter-title::after  { margin-left: 0.35em; }
+  body.theme-christmas .slide.content-slide,
+  body.theme-christmas .slide.program-slide {
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'><defs><g id='snow2' stroke='%232d8f3a' stroke-width='1.2' fill='none' stroke-linecap='round'><line x1='0' y1='-10' x2='0' y2='10'/><line x1='-10' y1='0' x2='10' y2='0'/><line x1='-7' y1='-7' x2='7' y2='7'/><line x1='-7' y1='7' x2='7' y2='-7'/></g></defs><g opacity='0.3'><use href='%23snow2' transform='translate(40,40)'/><use href='%23snow2' transform='translate(150,60) scale(0.8)'/><use href='%23snow2' transform='translate(80,140) scale(0.7)'/><use href='%23snow2' transform='translate(170,160) scale(0.9)'/></g></svg>");
+    background-size: 220px 220px;
+    background-repeat: repeat;
+  }
+  body.theme-christmas .slide.content-slide li::before {
+    content: '★';
+    background: transparent; width: auto; height: auto;
+    color: var(--theme-secondary);
+    font-size: 1.1em; line-height: 1;
+    top: 0.55em; left: 4px;
+  }
+
+  /* ============================================================ */
+  /* 🎍 新年会:金枠+赤コーナーでシンプルに華やか                   */
+  /* ============================================================ */
+  /* 背景パターンなし(シンプルに保つ) */
+  body.theme-shinnen .slide {
+    background-image: none;
+  }
+  /* 全スライドに金色の二重枠 */
+  body.theme-shinnen .slide.content-slide,
+  body.theme-shinnen .slide.program-slide,
+  body.theme-shinnen .slide.chapter-slide {
+    box-shadow:
+      inset 0 0 0 8px #fffbf0,
+      inset 0 0 0 10px #b8860b,
+      inset 0 0 0 14px #fffbf0,
+      inset 0 0 0 15px #b8860b;
+  }
+  /* 四隅の赤い梅マーク(コーナー装飾) */
+  body.theme-shinnen .slide.content-slide::before,
+  body.theme-shinnen .slide.program-slide::before,
+  body.theme-shinnen .slide.chapter-slide::before {
+    content: '✿ ✿';
+    position: absolute;
+    top: 28px; left: 28px;
+    color: #c8102e;
+    font-size: clamp(18px, 2vw, 24px);
+    letter-spacing: 4px;
+    opacity: 0.85;
+    z-index: 2;
+  }
+  body.theme-shinnen .slide.content-slide::after,
+  body.theme-shinnen .slide.program-slide::after,
+  body.theme-shinnen .slide.chapter-slide::after {
+    content: '✿ ✿';
+    position: absolute;
+    bottom: 28px; right: 28px;
+    color: #c8102e;
+    font-size: clamp(18px, 2vw, 24px);
+    letter-spacing: 4px;
+    opacity: 0.85;
+    z-index: 2;
+  }
+  /* タイトルスライド:金枠+大きな梅(左上・右下) */
+  body.theme-shinnen .slide.title-slide {
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><defs><g id='ume'><circle cx='0' cy='-14' r='8' fill='%23c8102e'/><circle cx='13' cy='-4' r='8' fill='%23c8102e'/><circle cx='8' cy='12' r='8' fill='%23c8102e'/><circle cx='-8' cy='12' r='8' fill='%23c8102e'/><circle cx='-13' cy='-4' r='8' fill='%23c8102e'/><circle r='4' fill='%23ffd700'/></g></defs><use href='%23ume' transform='translate(50,55)'/><use href='%23ume' transform='translate(95,90) scale(0.65)'/><use href='%23ume' transform='translate(40,115) scale(0.75)'/></svg>"),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><defs><g id='ume2'><circle cx='0' cy='-14' r='8' fill='%23c8102e'/><circle cx='13' cy='-4' r='8' fill='%23c8102e'/><circle cx='8' cy='12' r='8' fill='%23c8102e'/><circle cx='-8' cy='12' r='8' fill='%23c8102e'/><circle cx='-13' cy='-4' r='8' fill='%23c8102e'/><circle r='4' fill='%23ffd700'/></g></defs><use href='%23ume2' transform='translate(150,145)'/><use href='%23ume2' transform='translate(105,110) scale(0.65)'/><use href='%23ume2' transform='translate(160,85) scale(0.75)'/></svg>"),
+      var(--theme-bg-gradient);
+    background-position: top 6% left 6%, bottom 6% right 6%, center;
+    background-size: 22% auto, 22% auto, cover;
+    background-repeat: no-repeat, no-repeat, no-repeat;
+    box-shadow:
+      inset 0 0 0 8px #fffbf0,
+      inset 0 0 0 10px #b8860b,
+      inset 0 0 0 14px #fffbf0,
+      inset 0 0 0 15px #b8860b;
+  }
+  body.theme-shinnen .slide.title-slide::before {
+    background-image: none;
+  }
+  body.theme-shinnen .slide.chapter-slide .chapter-title { position: relative; display: inline-block; }
+  body.theme-shinnen .slide.chapter-slide .chapter-title .chapter-deco-l,
+  body.theme-shinnen .slide.chapter-slide .chapter-title .chapter-deco-r { display: none; }
+  body.theme-shinnen .slide.content-slide li::before {
+    content: '◆';
+    background: transparent; width: auto; height: auto;
+    color: var(--theme-primary);
+    font-size: 0.9em; line-height: 1;
+    top: 0.65em; left: 6px;
+  }
+
+  /* ============================================================ */
+  /* ☀ MTC夏合宿:波+太陽                                          */
+  /* ============================================================ */
+  body.theme-mtc .slide {
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='40' viewBox='0 0 160 40'><g fill='none' stroke='%232196d4' stroke-width='1.5' opacity='0.25' stroke-linecap='round'><path d='M0,20 Q20,5 40,20 T80,20 T120,20 T160,20'/><path d='M0,30 Q20,15 40,30 T80,30 T120,30 T160,30' opacity='0.5'/></g></svg>");
+    background-size: 200px 50px;
+    background-repeat: repeat;
+    background-position: bottom;
+  }
+  body.theme-mtc .slide.title-slide {
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><g transform='translate(330,75)'><circle r='45' fill='%23ff8c42' opacity='0.9'/><g stroke='%23ff8c42' stroke-width='4' stroke-linecap='round' opacity='0.85'><line x1='-65' y1='0' x2='-55' y2='0'/><line x1='65' y1='0' x2='55' y2='0'/><line x1='0' y1='-65' x2='0' y2='-55'/><line x1='0' y1='65' x2='0' y2='55'/><line x1='-46' y1='-46' x2='-39' y2='-39'/><line x1='46' y1='46' x2='39' y2='39'/><line x1='-46' y1='46' x2='-39' y2='39'/><line x1='46' y1='-46' x2='39' y2='-39'/></g></g></svg>"),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><g fill='none' stroke='%232196d4' stroke-width='3' opacity='0.6' stroke-linecap='round'><path d='M-20,250 Q40,225 100,250 T220,250 T340,250 T460,250'/><path d='M-20,270 Q40,245 100,270 T220,270 T340,270 T460,270' opacity='0.7'/><path d='M-20,290 Q40,265 100,290 T220,290 T340,290 T460,290' opacity='0.4'/></g></svg>"),
+      var(--theme-bg-gradient);
+    background-position: top right, bottom center, center;
+    background-size: 35% auto, 100% auto, cover;
+    background-repeat: no-repeat, no-repeat, no-repeat;
+  }
+  body.theme-mtc .slide.title-slide::before {
+    background-image:
+      radial-gradient(circle at 80% 25%, rgba(255,140,66,0.2) 0, rgba(255,140,66,0) 100px);
+  }
+  body.theme-mtc .slide.chapter-slide .chapter-title { position: relative; display: inline-block; }
+  body.theme-mtc .slide.chapter-slide .chapter-title::before {
+    content: '☀'; font-size: 0.55em; opacity: 0.85;
+    color: var(--theme-secondary);
+    margin-right: 0.35em; vertical-align: middle; display: inline-block;
+  }
+  body.theme-mtc .slide.chapter-slide .chapter-title::after {
+    content: '🌊'; font-size: 0.5em; opacity: 0.85;
+    margin-left: 0.35em; vertical-align: middle; display: inline-block;
+  }
+  body.theme-mtc .slide.content-slide li::before {
+    content: '▸';
+    background: transparent; width: auto; height: auto;
+    color: var(--theme-primary);
+    font-size: 1.2em; line-height: 1;
+    top: 0.5em; left: 6px;
+  }
+
+  /* ============================================================ */
+  /* ✨ 新入生歓迎会:桜+藤色配色(送る会の桜を藤色で)              */
+  /* ============================================================ */
+  /* 全スライドに薄く整然と桜(藤色) */
+  body.theme-kangei .slide {
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'><defs><g id='skk' fill='%23c9a8e0'><path d='M0,-3 C-5,-15 -10,-19 -6,-22 C-3,-23 -1,-22 0,-20 C1,-22 3,-23 6,-22 C10,-19 5,-15 0,-3 Z'/><path d='M0,-3 C-5,-15 -10,-19 -6,-22 C-3,-23 -1,-22 0,-20 C1,-22 3,-23 6,-22 C10,-19 5,-15 0,-3 Z' transform='rotate(72)'/><path d='M0,-3 C-5,-15 -10,-19 -6,-22 C-3,-23 -1,-22 0,-20 C1,-22 3,-23 6,-22 C10,-19 5,-15 0,-3 Z' transform='rotate(144)'/><path d='M0,-3 C-5,-15 -10,-19 -6,-22 C-3,-23 -1,-22 0,-20 C1,-22 3,-23 6,-22 C10,-19 5,-15 0,-3 Z' transform='rotate(216)'/><path d='M0,-3 C-5,-15 -10,-19 -6,-22 C-3,-23 -1,-22 0,-20 C1,-22 3,-23 6,-22 C10,-19 5,-15 0,-3 Z' transform='rotate(288)'/><circle r='2.5' fill='%23ffd700'/></g></defs><g opacity='0.18'><use href='%23skk' transform='translate(45,45)'/><use href='%23skk' transform='translate(135,135) rotate(36)'/></g></svg>");
+    background-size: 360px 360px;
+    background-repeat: repeat;
+  }
+  /* タイトルスライド:大きい桜の枝(藤色) */
+  body.theme-kangei .slide.title-slide {
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><g><path d='M-20 80 Q60 110 140 90 Q220 75 300 95' stroke='%23a07a65' stroke-width='3' fill='none' opacity='0.55' stroke-linecap='round'/><path d='M40 90 Q48 78 60 84' stroke='%23a07a65' stroke-width='1.8' fill='none' opacity='0.5' stroke-linecap='round'/><path d='M120 88 Q130 76 142 82' stroke='%23a07a65' stroke-width='1.8' fill='none' opacity='0.5' stroke-linecap='round'/><path d='M210 84 Q220 72 232 78' stroke='%23a07a65' stroke-width='1.8' fill='none' opacity='0.5' stroke-linecap='round'/></g><defs><g id='kbig' fill='%23c9a8e0'><path d='M0,-4 C-7,-22 -14,-28 -8,-32 C-4,-34 -2,-32 0,-30 C2,-32 4,-34 8,-32 C14,-28 7,-22 0,-4 Z'/><path d='M0,-4 C-7,-22 -14,-28 -8,-32 C-4,-34 -2,-32 0,-30 C2,-32 4,-34 8,-32 C14,-28 7,-22 0,-4 Z' transform='rotate(72)'/><path d='M0,-4 C-7,-22 -14,-28 -8,-32 C-4,-34 -2,-32 0,-30 C2,-32 4,-34 8,-32 C14,-28 7,-22 0,-4 Z' transform='rotate(144)'/><path d='M0,-4 C-7,-22 -14,-28 -8,-32 C-4,-34 -2,-32 0,-30 C2,-32 4,-34 8,-32 C14,-28 7,-22 0,-4 Z' transform='rotate(216)'/><path d='M0,-4 C-7,-22 -14,-28 -8,-32 C-4,-34 -2,-32 0,-30 C2,-32 4,-34 8,-32 C14,-28 7,-22 0,-4 Z' transform='rotate(288)'/><circle r='4' fill='%23ffd700'/></g></defs><g opacity='0.92'><use href='%23kbig' transform='translate(45,82) rotate(-15)'/><use href='%23kbig' transform='translate(125,86) rotate(20) scale(0.9)'/><use href='%23kbig' transform='translate(215,80) rotate(-8) scale(0.85)'/><use href='%23kbig' transform='translate(85,55) rotate(35) scale(0.6)'/><use href='%23kbig' transform='translate(175,108) rotate(-30) scale(0.55)'/></g></svg>"),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><g><path d='M420 220 Q340 250 260 230 Q180 215 100 235' stroke='%23a07a65' stroke-width='3' fill='none' opacity='0.55' stroke-linecap='round'/></g><defs><g id='kbig2' fill='%23c9a8e0'><path d='M0,-4 C-7,-22 -14,-28 -8,-32 C-4,-34 -2,-32 0,-30 C2,-32 4,-34 8,-32 C14,-28 7,-22 0,-4 Z'/><path d='M0,-4 C-7,-22 -14,-28 -8,-32 C-4,-34 -2,-32 0,-30 C2,-32 4,-34 8,-32 C14,-28 7,-22 0,-4 Z' transform='rotate(72)'/><path d='M0,-4 C-7,-22 -14,-28 -8,-32 C-4,-34 -2,-32 0,-30 C2,-32 4,-34 8,-32 C14,-28 7,-22 0,-4 Z' transform='rotate(144)'/><path d='M0,-4 C-7,-22 -14,-28 -8,-32 C-4,-34 -2,-32 0,-30 C2,-32 4,-34 8,-32 C14,-28 7,-22 0,-4 Z' transform='rotate(216)'/><path d='M0,-4 C-7,-22 -14,-28 -8,-32 C-4,-34 -2,-32 0,-30 C2,-32 4,-34 8,-32 C14,-28 7,-22 0,-4 Z' transform='rotate(288)'/><circle r='4' fill='%23ffd700'/></g></defs><g opacity='0.92'><use href='%23kbig2' transform='translate(355,222) rotate(15)'/><use href='%23kbig2' transform='translate(275,228) rotate(-20) scale(0.9)'/><use href='%23kbig2' transform='translate(185,222) rotate(8) scale(0.85)'/><use href='%23kbig2' transform='translate(315,250) rotate(35) scale(0.6)'/></g></svg>"),
+      var(--theme-bg-gradient);
+    background-position: top left, bottom right, center;
+    background-size: 50% auto, 50% auto, cover;
+    background-repeat: no-repeat, no-repeat, no-repeat;
+  }
+  body.theme-kangei .slide.title-slide::before {
+    background-image:
+      radial-gradient(circle at 25% 60%, rgba(153,102,204,0.18) 0, rgba(153,102,204,0) 100px),
+      radial-gradient(circle at 80% 40%, rgba(255,215,0,0.2) 0, rgba(255,215,0,0) 80px);
+  }
+  /* 章タイトル両端に桜+きらめき */
+  body.theme-kangei .slide.chapter-slide .chapter-title { position: relative; display: inline-block; }
+  body.theme-kangei .slide.chapter-slide .chapter-title::before {
+    content: '🌸'; font-size: 0.55em; opacity: 0.85;
+    margin-right: 0.35em; vertical-align: middle; display: inline-block;
+    transform: rotate(-12deg);
+  }
+  body.theme-kangei .slide.chapter-slide .chapter-title::after {
+    content: '🌸'; font-size: 0.55em; opacity: 0.85;
+    margin-left: 0.35em; vertical-align: middle; display: inline-block;
+    transform: rotate(12deg);
+  }
+  /* 本文・プログラムも同じ桜パターン */
+  body.theme-kangei .slide.content-slide,
+  body.theme-kangei .slide.program-slide {
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'><defs><g id='skk2' fill='%23c9a8e0'><path d='M0,-3 C-5,-15 -10,-19 -6,-22 C-3,-23 -1,-22 0,-20 C1,-22 3,-23 6,-22 C10,-19 5,-15 0,-3 Z'/><path d='M0,-3 C-5,-15 -10,-19 -6,-22 C-3,-23 -1,-22 0,-20 C1,-22 3,-23 6,-22 C10,-19 5,-15 0,-3 Z' transform='rotate(72)'/><path d='M0,-3 C-5,-15 -10,-19 -6,-22 C-3,-23 -1,-22 0,-20 C1,-22 3,-23 6,-22 C10,-19 5,-15 0,-3 Z' transform='rotate(144)'/><path d='M0,-3 C-5,-15 -10,-19 -6,-22 C-3,-23 -1,-22 0,-20 C1,-22 3,-23 6,-22 C10,-19 5,-15 0,-3 Z' transform='rotate(216)'/><path d='M0,-3 C-5,-15 -10,-19 -6,-22 C-3,-23 -1,-22 0,-20 C1,-22 3,-23 6,-22 C10,-19 5,-15 0,-3 Z' transform='rotate(288)'/><circle r='2.5' fill='%23ffd700'/></g></defs><g opacity='0.18'><use href='%23skk2' transform='translate(45,45)'/><use href='%23skk2' transform='translate(135,135) rotate(36)'/></g></svg>"),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 200'><g><path d='M320 30 Q260 12 200 35 Q160 50 130 38' stroke='%23a07a65' stroke-width='2.2' fill='none' opacity='0.55' stroke-linecap='round'/></g><defs><g id='kb3' fill='%23c9a8e0'><path d='M0,-3 C-6,-18 -12,-23 -7,-26 C-3,-28 -1,-26 0,-24 C1,-26 3,-28 7,-26 C12,-23 6,-18 0,-3 Z'/><path d='M0,-3 C-6,-18 -12,-23 -7,-26 C-3,-28 -1,-26 0,-24 C1,-26 3,-28 7,-26 C12,-23 6,-18 0,-3 Z' transform='rotate(72)'/><path d='M0,-3 C-6,-18 -12,-23 -7,-26 C-3,-28 -1,-26 0,-24 C1,-26 3,-28 7,-26 C12,-23 6,-18 0,-3 Z' transform='rotate(144)'/><path d='M0,-3 C-6,-18 -12,-23 -7,-26 C-3,-28 -1,-26 0,-24 C1,-26 3,-28 7,-26 C12,-23 6,-18 0,-3 Z' transform='rotate(216)'/><path d='M0,-3 C-6,-18 -12,-23 -7,-26 C-3,-28 -1,-26 0,-24 C1,-26 3,-28 7,-26 C12,-23 6,-18 0,-3 Z' transform='rotate(288)'/><circle r='3' fill='%23ffd700'/></g></defs><g opacity='0.85'><use href='%23kb3' transform='translate(265,30) rotate(15)'/><use href='%23kb3' transform='translate(220,38) rotate(-20) scale(0.85)'/><use href='%23kb3' transform='translate(175,32) rotate(8) scale(0.75)'/><use href='%23kb3' transform='translate(140,42) rotate(30) scale(0.6)'/></g></svg>");
+    background-position: top left, top right;
+    background-size: 360px 360px, 35% auto;
+    background-repeat: repeat, no-repeat;
+  }
+  /* 箇条書きを花びらに(藤色) */
+  body.theme-kangei .slide.content-slide li::before {
+    content: '❀';
+    background: transparent; width: auto; height: auto;
+    color: var(--theme-primary);
+    font-size: 1.2em; line-height: 1;
+    top: 0.55em; left: 4px;
+  }
+
+  /* ============================================================ */
+  /* ♡ シンプル:装飾なし(初期状態のまま)                         */
+  /* ============================================================ */
+
+  ruby { ruby-position: over; }
+  rt {
+    font-size: 0.45em; font-weight: normal;
+    color: var(--gray-text);
+    letter-spacing: 0;
+  }
+  .editable-ruby { cursor: pointer; }
+
+  .slide-counter {
+    position: fixed;
+    bottom: calc(16px + var(--safe-bottom));
+    left: 50%; transform: translateX(-50%);
+    background: rgba(26,26,26,0.85);
+    color: white;
+    padding: 6px 16px;
+    border-radius: 16px;
+    font-size: 12px; font-weight: 700;
+    z-index: 1010;
+  }
+  .tap-left, .tap-right {
+    position: fixed; top: 0; bottom: 0;
+    width: 30%; z-index: 1005;
+  }
+  .tap-left { left: 0; }
+  .tap-right { right: 0; }
+
+  /* モーダル */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 2000;
+    align-items: flex-end; justify-content: center;
+    padding: 0;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 20px 20px 0 0;
+    padding: 24px 20px calc(24px + var(--safe-bottom));
+    max-width: 500px; width: 100%;
+    box-shadow: 0 -8px 30px rgba(0,0,0,0.15);
+    animation: slideUp 0.25s ease-out;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .modal-handle {
+    width: 36px; height: 4px;
+    background: var(--gray-3);
+    border-radius: 2px;
+    margin: -8px auto 16px;
+  }
+  .modal .form-row {
+    background: var(--gray-1);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .modal .form-row label {
+    font-size: 11px; font-weight: 700;
+    color: var(--gray-text);
+    margin-bottom: 4px;
+    display: block;
+  }
+  .modal .form-row input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    font-family: inherit;
+    color: var(--ink);
+    -webkit-appearance: none;
+  }
+  .modal .form-row input:focus { outline: none; }
+  .modal-actions {
+    display: flex; gap: 8px;
+    margin-top: 12px;
+  }
+  .modal-actions button {
+    flex: 1;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 700; font-size: 15px;
+    cursor: pointer; font-family: inherit;
+    border: none;
+  }
+  .modal-actions .secondary {
+    background: var(--gray-1); color: var(--ink);
+  }
+  .modal-actions .primary {
+    background: var(--red); color: white;
+  }
+
+  .theme-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 12px;
+  }
+  .theme-card {
+    background: white;
+    border: 2px solid var(--gray-2);
+    border-radius: 12px;
+    padding: 14px 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.1s;
+    font-family: inherit;
+  }
+  .theme-card:active { transform: scale(0.97); }
+  .theme-card.active {
+    border-color: var(--red);
+    background: var(--red-pale);
+    box-shadow: 0 0 0 3px var(--red-soft);
+  }
+  .theme-card .theme-emoji {
+    font-size: 28px;
+    line-height: 1;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .theme-card .theme-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .theme-card .theme-color-bar {
+    height: 4px;
+    border-radius: 2px;
+    margin-top: 8px;
+  }
+
+  /* リセットボタン */
+  .reset-btn {
+    width: 100%;
+    background: white;
+    border: 1.5px solid #ff6b6b;
+    color: #d44;
+    padding: 14px;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 12px;
+  }
+  .reset-btn:active { background: #ffeded; }
+
+  /* 確認モーダル */
+  .confirm-text {
+    text-align: center;
+    color: var(--gray-text);
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+  .confirm-text strong { color: var(--ink); display: block; font-size: 16px; margin-bottom: 4px; }
+
+  /* スワイプ中のヒント */
+  .swipe-hint {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 700;
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .swipe-hint.show { opacity: 1; }
+
+  .toast {
+    position: fixed;
+    top: 20px;
+    left: 50%; transform: translateX(-50%) translateY(-100px);
+    background: var(--ink); color: white;
+    padding: 12px 22px;
+    border-radius: 100px;
+    font-weight: 700;
+    z-index: 3000;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    font-size: 14px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { background: #34c759; }
+</style>
+<!-- 出力用ライブラリ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/gitbrent/PptxGenJS@3.12.0/dist/pptxgen.bundle.js"></script>
+</head>
+<body>
+
+<!-- ========== トップヘッダー ========== -->
+<div class="top-header">
+  <div class="header-logo"></div>
+  <div class="header-title">
+    <h1>JRC スライドメーカー</h1>
+    <p>役員会向け・自動生成ツール</p>
+  </div>
+  <button class="header-action header-action-secondary" onclick="openExportModal()" title="書き出し">📤</button>
+  <button class="header-action" onclick="saveData()">保存</button>
+</div>
+
+<!-- 書き出しモーダル -->
+<div class="export-modal" id="exportModal">
+  <div class="export-sheet">
+    <div class="export-handle"></div>
+    <h3 class="export-title">スライドを書き出す</h3>
+    <p class="export-desc">どの形式で保存する？</p>
+    <div class="export-grid">
+      <button class="export-card" data-fmt="png" onclick="exportSlides('png')">
+        <div class="export-icon">🖼️</div>
+        <div class="export-name">PNG</div>
+        <div class="export-meta">きれい・高画質</div>
+      </button>
+      <button class="export-card" data-fmt="jpeg" onclick="exportSlides('jpeg')">
+        <div class="export-icon">📷</div>
+        <div class="export-name">JPEG</div>
+        <div class="export-meta">かるい・共有向き</div>
+      </button>
+      <button class="export-card" data-fmt="pdf" onclick="exportSlides('pdf')">
+        <div class="export-icon">📄</div>
+        <div class="export-name">PDF</div>
+        <div class="export-meta">印刷・配布向き</div>
+      </button>
+      <button class="export-card" data-fmt="pptx-image" onclick="exportSlides('pptx-image')">
+        <div class="export-icon">🎨</div>
+        <div class="export-name">PPTX(画像)</div>
+        <div class="export-meta">見た目そのまま</div>
+      </button>
+      <button class="export-card export-card-wide" data-fmt="pptx-edit" onclick="exportSlides('pptx-edit')">
+        <div class="export-icon">✏️</div>
+        <div class="export-name">PPTX(編集できる)</div>
+        <div class="export-meta">あとでGoogleスライドで直したい時(装飾は簡略化)</div>
+      </button>
+    </div>
+    <button class="export-cancel" onclick="closeExportModal()">キャンセル</button>
+  </div>
+</div>
+
+<!-- 書き出し進捗オーバーレイ -->
+<div class="export-progress" id="exportProgress">
+  <div class="export-progress-box">
+    <div class="export-progress-spinner"></div>
+    <div class="export-progress-text" id="exportProgressText">準備中…</div>
+    <div class="export-progress-bar"><div class="export-progress-fill" id="exportProgressFill"></div></div>
+  </div>
+</div>
+
+<!-- ========== ページ1: イベント情報 ========== -->
+<div class="page active" id="page-event">
+  <div class="section-label">テーマを選ぶ</div>
+  <div class="group">
+    <div class="theme-grid" id="themeGrid"></div>
+  </div>
+  <p class="section-help">スライドの色や装飾が変わります</p>
+
+  <div class="section-label">基本情報</div>
+  <div class="group">
+    <div class="group-row">
+      <span class="row-label">タイトル</span>
+      <input type="text" id="title1" placeholder="例: 2025年度 JRC">
+    </div>
+    <div class="group-row">
+      <span class="row-label">サブ</span>
+      <input type="text" id="title2" placeholder="例: 3年生を送る会">
+    </div>
+    <div class="group-row">
+      <span class="row-label">日付</span>
+      <input type="text" id="date" placeholder="例: 2026年3月20日">
+    </div>
+  </div>
+
+  <div class="section-label">テーマ・サブタイトル(任意)</div>
+  <div class="group">
+    <div class="group-stack">
+      <input type="text" id="theme" placeholder="例: 一期一会 〜思い出の瞬間に〜">
+    </div>
+  </div>
+  <p class="section-help">プログラム表の前に表示される一言</p>
+
+  <div class="section-label">プログラム表のタイトル</div>
+  <div class="group">
+    <div class="group-stack">
+      <input type="text" id="programTitle" placeholder="プログラム" value="プログラム">
+    </div>
+  </div>
+
+  <div class="section-label">表示設定</div>
+  <div class="group">
+    <div class="group-row">
+      <span class="row-label" style="flex:1;">漢字に ふりがなを 自動でつける</span>
+      <div class="toggle on" id="furiganaToggle" onclick="toggleFurigana(this)"></div>
+    </div>
+  </div>
+
+  <div style="text-align:center; margin: 28px 0 8px;">
+    <button class="header-action" style="padding: 14px 32px; font-size: 16px;" onclick="startSlides()">▶ スライドを表示</button>
+  </div>
+
+  <div class="section-label">データ管理</div>
+  <button class="reset-btn" onclick="confirmReset()">🗑 すべての入力をリセット</button>
+  <p class="section-help" style="text-align:center;">入力したすべての内容を初期値に戻します</p>
+</div>
+
+<!-- ========== ページ2: プログラム ========== -->
+<div class="page" id="page-program">
+  <div class="section-label">開始時刻</div>
+  <div class="start-time-card">
+    <div class="clock-icon">⏰</div>
+    <div class="info">
+      <div class="info-label">最初の項目のスタート</div>
+      <div class="info-value">これを基準に時間を計算</div>
+    </div>
+    <input type="time" id="startTime" value="09:30">
+  </div>
+
+  <div class="section-label">プログラム項目</div>
+  <div id="programList"></div>
+
+  <div class="fab-group">
+    <button class="fab-btn primary" onclick="addProgramRow()">
+      <span class="icon">+</span>項目を追加
+    </button>
+    <button class="fab-btn" onclick="addDayDivider()">
+      <span class="icon">📅</span>日付を区切る
+    </button>
+  </div>
+  <p class="section-help">
+    ・項目名と「分」を入れると、左の時間が自動計算<br>
+    ・6項目以上は自動で次のスライドに分割<br>
+    ・合宿で「1日目・2日目」を分けたい時は「日付を区切る」
+  </p>
+</div>
+
+<!-- ========== ページ3: 各項目の内容 ========== -->
+<div class="page" id="page-content">
+  <div class="section-label">各項目のスライド内容</div>
+  <p class="section-help" style="padding-top:0;">
+    プログラムの各項目に載せる本文を入れる。空でもOK。
+  </p>
+  <div id="contentBlocks" style="margin-top:8px;"></div>
+</div>
+
+<!-- ========== 下タブナビ ========== -->
+<nav class="bottom-nav">
+  <button class="nav-item active" data-page="event" onclick="switchPage('event')">
+    <span class="nav-icon">📋</span>
+    <span class="nav-label">イベント</span>
+  </button>
+  <button class="nav-item" data-page="program" onclick="switchPage('program')">
+    <span class="nav-icon">⏱</span>
+    <span class="nav-label">プログラム</span>
+  </button>
+  <button class="nav-item" data-page="content" onclick="switchPage('content')">
+    <span class="nav-icon">📝</span>
+    <span class="nav-label">本文</span>
+  </button>
+</nav>
+
+<!-- ========== スライド表示 ========== -->
+<div class="slide-mode" id="slideMode">
+  <div class="slide-controls">
+    <button class="icon-btn-circle" onclick="toggleFullscreen()">⛶</button>
+    <button class="icon-btn-circle" onclick="exitSlides()">✕</button>
+  </div>
+  <div class="slide-stage" id="slideStage"></div>
+  <div class="tap-left" onclick="prevSlide()"></div>
+  <div class="tap-right" onclick="nextSlide()"></div>
+  <div class="slide-counter" id="counter"></div>
+</div>
+
+<!-- ========== モーダル ========== -->
+<div class="modal-overlay" id="furiganaModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3>ふりがなを なおす</h3>
+    <div class="form-row">
+      <label>漢字</label>
+      <input type="text" id="modalKanji" readonly>
+    </div>
+    <div class="form-row">
+      <label>ふりがな</label>
+      <input type="text" id="modalReading" placeholder="ひらがなで入れる">
+    </div>
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal()">キャンセル</button>
+      <button class="primary" onclick="saveFurigana()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3>本当にリセットしますか?</h3>
+    <p class="confirm-text">
+      <strong>すべての入力が消えます</strong>
+      タイトル、プログラム、本文、テーマなど<br>すべて初期値に戻ります
+    </p>
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeConfirm()">キャンセル</button>
+      <button class="primary" style="background:#d44;" onclick="resetAll()">リセットする</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">保存したよ</div>
+<div class="swipe-hint" id="swipeHint"></div>
+
+<script>
+const baseDictionary = {
+  '水分補給': 'すいぶんほきゅう', '自己紹介': 'じこしょうかい', '写真撮影': 'しゃしんさつえい',
+  'プレゼント贈呈': 'プレゼントぞうてい', '一期一会': 'いちごいちえ',
+  '入場退場': 'にゅうじょうたいじょう', '伝言ゲーム': 'でんごんゲーム', '借り物ゲーム': 'かりものゲーム',
+  '開会式': 'かいかいしき', '閉会式': 'へいかいしき', '諸注意': 'しょちゅうい',
+  '風船バレー': 'ふうせんバレー', '在校生': 'ざいこうせい', '花道': 'はなみち', '手話': 'しゅわ',
+  '受付': 'うけつけ', '誓い': 'ちかい', '休憩': 'きゅうけい', '卒業': 'そつぎょう',
+  '先生': 'せんせい', '役員': 'やくいん', '学校': 'がっこう', '学年': 'がくねん', '名前': 'なまえ',
+  '高校': 'こうこう', '時間': 'じかん', '挑戦者': 'ちょうせんしゃ', '観客': 'かんきゃく',
+  '着席': 'ちゃくせき', '椅子': 'いす', '司会': 'しかい', '数字': 'すうじ', '斜め': 'ななめ',
+  '中身': 'なかみ', '箱': 'はこ', '手探り': 'てさぐり', '言葉': 'ことば',
+  '答え': 'こたえ', '直接': 'ちょくせつ', '一発': 'いっぱつ', '思い出': 'おもいで',
+  '瞬間': 'しゅんかん', '形': 'かたち', '左右': 'さゆう', '人達': 'ひとたち',
+  '好き': 'すき', '欲しい': 'ほしい', '一番': 'いちばん', '楽しい': 'たのしい',
+  '年生': 'ねんせい', '年度': 'ねんど', '送る': 'おくる', '協力': 'きょうりょく',
+  '渡し': 'わたし', '各班': 'かくはん', '体調': 'たいちょう', '使用': 'しよう',
+  '直進': 'ちょくしん', '危ない': 'あぶない', '終了': 'しゅうりょう', '最後': 'さいご',
+  '合計': 'ごうけい', '順位': 'じゅんい', '頑張': 'がんば', '実際': 'じっさい',
+  '見本': 'みほん', '続いた': 'つづいた', '勝ち': 'かち', '増え': 'ふえ',
+  '難しい': 'むずかしい', '気をつけ': 'きをつけ', '転がし': 'ころがし', '集計': 'しゅうけい',
+  '想像': 'そうぞう', '揃った': 'そろった', '成功': 'せいこう', '以上': 'いじょう',
+  '野球': 'やきゅう', '忍者': 'にんじゃ', '料理': 'りょうり', '飾り': 'かざり',
+  '仲良く': 'なかよく', '注意': 'ちゅうい', '前': 'まえ', '後ろ': 'うしろ',
+  '左': 'ひだり', '右': 'みぎ', '上': 'うえ', '下': 'した', '足': 'あし',
+  '心': 'こころ', '体': 'からだ', '頭': 'あたま', '人': 'ひと',
+  '迷わず': 'まよわず', '周り': 'まわり', '伝えて': 'つたえて', '控えて': 'ひかえて',
+  '出て': 'でて', '床': 'ゆか', '置いて': 'おいて', '番': 'ばん',
+  '日目': 'にちめ', '朝食': 'ちょうしょく', '昼食': 'ちゅうしょく', '夕食': 'ゆうしょく',
+  '起床': 'きしょう', '就寝': 'しゅうしん', '入浴': 'にゅうよく',
+  '新入生': 'しんにゅうせい', '歓迎会': 'かんげいかい', '新年会': 'しんねんかい',
+  '夏合宿': 'なつがっしゅく', '合宿': 'がっしゅく'
+};
+
+let userDictionary = {};
+try {
+  const saved = localStorage.getItem('jrc_user_dict');
+  if (saved) userDictionary = JSON.parse(saved);
+} catch(e) {}
+
+function getDictionary() { return { ...baseDictionary, ...userDictionary }; }
+function getSortedEntries() {
+  const dict = getDictionary();
+  return Object.entries(dict).sort((a, b) => b[0].length - a[0].length);
+}
+
+let eventData = {
+  title1: '', title2: '', theme: '', date: '',
+  startTime: '09:30',
+  programTitle: 'プログラム',
+  furiganaOn: true,
+  themeStyle: 'simple',
+  programs: [
+    { type: 'item', minutes: 30, name: '受付' },
+    { type: 'item', minutes: 5, name: '開会式' },
+    { type: 'item', minutes: 5, name: '自己紹介' }
+  ],
+  contents: {}
+};
+
+const THEMES = [
+  { id: 'simple', name: 'シンプル', emoji: '♡', color: '#d4001a' },
+  { id: 'soubetsu', name: '3年生を送る会', emoji: '🌸', color: '#e8889a' },
+  { id: 'christmas', name: 'クリスマス会', emoji: '🎄', color: '#c8102e' },
+  { id: 'shinnen', name: '新年会', emoji: '🎍', color: '#b8860b' },
+  { id: 'mtc', name: 'MTC(夏合宿)', emoji: '☀', color: '#2196d4' },
+  { id: 'kangei', name: '新入生歓迎会', emoji: '🌸', color: '#c9a8e0' }
+];
+
+function applyTheme(themeId) {
+  document.body.className = '';
+  if (themeId && themeId !== 'simple') {
+    document.body.classList.add(`theme-${themeId}`);
+  }
+  eventData.themeStyle = themeId;
+  // テーマカードの選択状態を更新
+  document.querySelectorAll('.theme-card').forEach(card => {
+    card.classList.toggle('active', card.dataset.theme === themeId);
+  });
+}
+
+function renderThemeGrid() {
+  const grid = document.getElementById('themeGrid');
+  grid.innerHTML = '';
+  THEMES.forEach(t => {
+    const card = document.createElement('button');
+    card.className = 'theme-card';
+    card.dataset.theme = t.id;
+    if ((eventData.themeStyle || 'simple') === t.id) card.classList.add('active');
+    card.innerHTML = `
+      <span class="theme-emoji">${t.emoji}</span>
+      <span class="theme-name">${t.name}</span>
+      <div class="theme-color-bar" style="background:${t.color};"></div>
+    `;
+    card.onclick = () => {
+      applyTheme(t.id);
+      autoSave();
+    };
+    grid.appendChild(card);
+  });
+}
+
+function saveData(silent) {
+  collectInput();
+  try {
+    localStorage.setItem('jrc_event_data', JSON.stringify(eventData));
+    if (!silent) showToast('保存したよ', true);
+    return true;
+  } catch(e) {
+    console.error('保存に失敗:', e);
+    if (!silent) showToast('保存に失敗しました', false);
+    return false;
+  }
+}
+
+// 自動保存(入力変更時に呼ぶ)
+let autoSaveTimer = null;
+function autoSave() {
+  if (autoSaveTimer) clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(() => {
+    saveData(true); // silent=true で通知出さない
+  }, 800);
+}
+
+function loadData() {
+  try {
+    const saved = localStorage.getItem('jrc_event_data');
+    if (saved) {
+      const loaded = JSON.parse(saved);
+      eventData = { ...eventData, ...loaded };
+      if (!eventData.contents) eventData.contents = {};
+      if (eventData.programs && eventData.programs.length > 0) {
+        eventData.programs = eventData.programs.map(p => {
+          if (p.type === 'day' || p.type === 'item') return p;
+          let minutes = p.minutes;
+          if (minutes === undefined && p.time) {
+            const m = p.time.match(/(\d{1,2}):(\d{1,2}).*?(\d{1,2}):(\d{1,2})/);
+            if (m) minutes = (parseInt(m[3]) * 60 + parseInt(m[4])) - (parseInt(m[1]) * 60 + parseInt(m[2]));
+          }
+          return { type: 'item', minutes: minutes || 10, name: p.name };
+        });
+      }
+    }
+  } catch(e) { console.error('読み込みエラー:', e); }
+  renderAll();
+}
+
+function switchPage(name) {
+  document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(c => c.classList.remove('active'));
+  document.querySelector(`.nav-item[data-page="${name}"]`).classList.add('active');
+  document.getElementById(`page-${name}`).classList.add('active');
+  if (name === 'content') {
+    collectInput();
+    renderContentBlocks();
+  }
+  window.scrollTo(0, 0);
+}
+
+function collectInput() {
+  eventData.title1 = document.getElementById('title1').value;
+  eventData.title2 = document.getElementById('title2').value;
+  eventData.theme = document.getElementById('theme').value;
+  eventData.date = document.getElementById('date').value;
+  eventData.startTime = document.getElementById('startTime').value || '09:30';
+  eventData.programTitle = document.getElementById('programTitle').value || 'プログラム';
+
+  const items = document.querySelectorAll('#programList .prog-card, #programList .day-card');
+  eventData.programs = [];
+  items.forEach(el => {
+    if (el.classList.contains('day-card')) {
+      const label = el.querySelector('input').value.trim();
+      if (label) eventData.programs.push({ type: 'day', label });
+    } else {
+      const name = el.querySelector('.name-input').value.trim();
+      const minutes = parseInt(el.querySelector('.min-input').value) || 0;
+      if (name) eventData.programs.push({ type: 'item', minutes, name });
+    }
+  });
+
+  document.querySelectorAll('.content-card').forEach(card => {
+    const key = card.dataset.key;
+    const text = card.querySelector('textarea').value;
+    eventData.contents[key] = text;
+  });
+}
+
+function parseTime(str) {
+  const m = String(str).match(/(\d{1,2}):(\d{1,2})/);
+  if (!m) return { h: 9, m: 30 };
+  return { h: parseInt(m[1]), m: parseInt(m[2]) };
+}
+function formatTime(t) { return `${t.h}:${String(t.m).padStart(2, '0')}`; }
+function addMinutes(t, mins) {
+  let total = t.h * 60 + t.m + mins;
+  return { h: Math.floor(total / 60) % 24, m: total % 60 };
+}
+
+function calculateTimes() {
+  const startTimeBase = parseTime(eventData.startTime);
+  let current = { ...startTimeBase };
+  let currentDayLabel = '';
+  return eventData.programs.map(p => {
+    if (p.type === 'day') {
+      current = { ...startTimeBase };
+      currentDayLabel = p.label;
+      return { ...p, dayLabel: p.label };
+    }
+    const start = current;
+    const end = addMinutes(start, p.minutes || 0);
+    current = end;
+    return {
+      ...p,
+      startStr: formatTime(start),
+      endStr: formatTime(end),
+      timeRange: `${formatTime(start)}〜${formatTime(end)}`,
+      dayLabel: currentDayLabel
+    };
+  });
+}
+
+function renderAll() {
+  document.getElementById('title1').value = eventData.title1 || '';
+  document.getElementById('title2').value = eventData.title2 || '';
+  document.getElementById('theme').value = eventData.theme || '';
+  document.getElementById('date').value = eventData.date || '';
+  document.getElementById('startTime').value = eventData.startTime || '09:30';
+  document.getElementById('programTitle').value = eventData.programTitle || 'プログラム';
+
+  const toggle = document.getElementById('furiganaToggle');
+  if (eventData.furiganaOn !== false) toggle.classList.add('on');
+  else toggle.classList.remove('on');
+
+  renderThemeGrid();
+  applyTheme(eventData.themeStyle || 'simple');
+  renderProgramList();
+  renderContentBlocks();
+}
+
+function renderProgramList() {
+  const list = document.getElementById('programList');
+  list.innerHTML = '';
+  let itemCountInDay = 0;
+  eventData.programs.forEach((p) => {
+    if (p.type === 'day') {
+      list.appendChild(createDayDivider(p.label));
+      itemCountInDay = 0;
+    } else {
+      if (itemCountInDay > 0 && itemCountInDay % 5 === 0) {
+        const sep = document.createElement('div');
+        sep.className = 'page-divider';
+        sep.textContent = '次のスライドに分かれます';
+        list.appendChild(sep);
+      }
+      list.appendChild(createProgramRow(p.minutes, p.name));
+      itemCountInDay++;
+    }
+  });
+  updateCalculatedTimes();
+}
+
+function createProgramRow(minutes, name) {
+  const card = document.createElement('div');
+  card.className = 'prog-card';
+  card.innerHTML = `
+    <div class="time-pill">--:--<span class="arrow">▼</span>--:--</div>
+    <input type="text" class="name-input" value="${escapeAttr(name)}" placeholder="項目名">
+    <div class="min-control">
+      <button class="step-btn" type="button" onclick="stepMinutes(this, -5)">−</button>
+      <input type="number" class="min-input" value="${minutes || ''}" min="0" inputmode="numeric">
+      <span class="min-suffix">分</span>
+      <button class="step-btn" type="button" onclick="stepMinutes(this, 5)">+</button>
+    </div>
+    <button class="del-btn" onclick="removeRow(this)">×</button>
+  `;
+  card.querySelector('.name-input').addEventListener('input', () => collectInput());
+  card.querySelector('.min-input').addEventListener('input', () => {
+    collectInput();
+    updateCalculatedTimes();
+  });
+  return card;
+}
+
+function createDayDivider(label) {
+  const div = document.createElement('div');
+  div.className = 'day-card';
+  div.innerHTML = `
+    <span class="day-icon">📅</span>
+    <input type="text" value="${escapeAttr(label)}" placeholder="例: 2日目">
+    <button class="del-btn" onclick="removeRow(this)">×</button>
+  `;
+  div.querySelector('input').addEventListener('input', () => {
+    collectInput();
+    updateCalculatedTimes();
+  });
+  return div;
+}
+
+function updateCalculatedTimes() {
+  const calculated = calculateTimes();
+  const cards = document.querySelectorAll('#programList .prog-card');
+  const itemCalcs = calculated.filter(x => x.type === 'item');
+  cards.forEach((el, i) => {
+    const timePill = el.querySelector('.time-pill');
+    const c = itemCalcs[i];
+    if (c) timePill.innerHTML = `${c.startStr}<span class="arrow">▼</span>${c.endStr}`;
+  });
+}
+
+function stepMinutes(btn, delta) {
+  const wrapper = btn.closest('.min-control');
+  const input = wrapper.querySelector('.min-input');
+  const current = parseInt(input.value) || 0;
+  input.value = Math.max(0, current + delta);
+  collectInput();
+  updateCalculatedTimes();
+  autoSave();
+}
+
+function addProgramRow() {
+  collectInput();
+  eventData.programs.push({ type: 'item', minutes: 10, name: '' });
+  renderProgramList();
+  autoSave();
+}
+
+function addDayDivider() {
+  collectInput();
+  const dayCount = eventData.programs.filter(p => p.type === 'day').length;
+  eventData.programs.push({ type: 'day', label: `${dayCount + 2}日目` });
+  renderProgramList();
+  autoSave();
+}
+
+function removeRow(btn) {
+  btn.parentElement.remove();
+  collectInput();
+  updateCalculatedTimes();
+  autoSave();
+}
+
+function renderContentBlocks() {
+  const container = document.getElementById('contentBlocks');
+  container.innerHTML = '';
+  let currentDay = '';
+  let hasItem = false;
+  eventData.programs.forEach(p => {
+    if (p.type === 'day') { currentDay = p.label; return; }
+    if (p.type !== 'item' || !p.name) return;
+    hasItem = true;
+    const text = eventData.contents[p.name] || '';
+    const card = document.createElement('div');
+    card.className = 'content-card';
+    card.dataset.key = p.name;
+    const dayTag = currentDay ? `<span class="day-tag">${escapeHtml(currentDay)}</span>` : '';
+    card.innerHTML = `
+      <div class="content-card-header">
+        <span class="title">${escapeHtml(p.name)}</span>
+        ${dayTag}
+      </div>
+      <textarea placeholder="このセクションでスライドに のせる文を 入れる(空でもOK)">${escapeHtml(text)}</textarea>
+    `;
+    // textarea入力時に即時データ反映+自動保存
+    const ta = card.querySelector('textarea');
+    ta.addEventListener('input', () => {
+      eventData.contents[p.name] = ta.value;
+      autoSave();
+    });
+    container.appendChild(card);
+  });
+  if (!hasItem) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="emoji">📝</div>
+        <p>プログラムに項目を追加すると、<br>ここに表示されます</p>
+      </div>
+    `;
+  }
+}
+
+function toggleFurigana(el) {
+  el.classList.toggle('on');
+  eventData.furiganaOn = el.classList.contains('on');
+  autoSave();
+}
+
+function applyFurigana(text) {
+  if (!text) return '';
+  if (!eventData.furiganaOn) return escapeHtml(text);
+
+  const entries = getSortedEntries();
+  let result = '';
+  let i = 0;
+  while (i < text.length) {
+    let matched = false;
+    for (const [word, reading] of entries) {
+      if (text.substr(i, word.length) === word) {
+        result += `<ruby class="editable-ruby" data-kanji="${escapeAttr(word)}">${escapeHtml(word)}<rt>${escapeHtml(reading)}</rt></ruby>`;
+        i += word.length;
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      const ch = text[i];
+      result += ch === '\n' ? '<br>' : escapeHtml(ch);
+      i++;
+    }
+  }
+  return result;
+}
+
+let slides = [];
+let currentSlide = 0;
+
+function startSlides() {
+  collectInput();
+  slides = buildSlides();
+  if (slides.length === 0) {
+    alert('スライドを作るには、まずタイトルや項目を入れてね');
+    return;
+  }
+  currentSlide = 0;
+  document.getElementById('slideMode').classList.add('active');
+  renderSlide();
+}
+
+function exitSlides() {
+  document.getElementById('slideMode').classList.remove('active');
+  if (document.fullscreenElement) document.exitFullscreen?.();
+}
+
+// ========== リセット ==========
+function confirmReset() {
+  document.getElementById('confirmModal').classList.add('show');
+}
+function closeConfirm() {
+  document.getElementById('confirmModal').classList.remove('show');
+}
+function resetAll() {
+  // 初期値に戻す
+  eventData = {
+    title1: '', title2: '', theme: '', date: '',
+    startTime: '09:30',
+    programTitle: 'プログラム',
+    furiganaOn: true,
+    themeStyle: 'simple',
+    programs: [
+      { type: 'item', minutes: 30, name: '受付' },
+      { type: 'item', minutes: 5, name: '開会式' },
+      { type: 'item', minutes: 5, name: '自己紹介' }
+    ],
+    contents: {}
+  };
+  // localStorageから削除
+  try {
+    localStorage.removeItem('jrc_event_data');
+  } catch(e) {}
+  closeConfirm();
+  renderAll();
+  showToast('リセットしました', true);
+  // 一番上にスクロール
+  window.scrollTo(0, 0);
+}
+
+// 確認モーダル背景タップで閉じる
+document.getElementById('confirmModal').addEventListener('click', (e) => {
+  if (e.target.id === 'confirmModal') closeConfirm();
+});
+
+// ========== スワイプ機能 ==========
+const PAGE_ORDER = ['event', 'program', 'content'];
+
+function getCurrentPageIdx() {
+  const active = document.querySelector('.page.active');
+  if (!active) return 0;
+  const id = active.id.replace('page-', '');
+  return PAGE_ORDER.indexOf(id);
+}
+
+let touchStartX = null;
+let touchStartY = null;
+let touchStartTime = 0;
+
+document.addEventListener('touchstart', (e) => {
+  // スライドモード中はスワイプを無効
+  if (document.getElementById('slideMode').classList.contains('active')) return;
+  // モーダル表示中も無効
+  if (document.querySelector('.modal-overlay.show')) return;
+  // input/textareaの中はスキップ(編集を妨げない)
+  const tag = e.target.tagName.toLowerCase();
+  if (tag === 'input' || tag === 'textarea') return;
+
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+  touchStartTime = Date.now();
+}, { passive: true });
+
+document.addEventListener('touchend', (e) => {
+  if (touchStartX === null) return;
+  if (document.getElementById('slideMode').classList.contains('active')) return;
+  if (document.querySelector('.modal-overlay.show')) return;
+
+  const touchEndX = e.changedTouches[0].clientX;
+  const touchEndY = e.changedTouches[0].clientY;
+  const dx = touchEndX - touchStartX;
+  const dy = touchEndY - touchStartY;
+  const elapsed = Date.now() - touchStartTime;
+
+  touchStartX = null;
+  touchStartY = null;
+
+  // スワイプ条件: 横方向に60px以上動き、縦の動きが横の半分以下、500ms以内
+  if (Math.abs(dx) < 60) return;
+  if (Math.abs(dy) > Math.abs(dx) * 0.6) return;
+  if (elapsed > 500) return;
+
+  const currentIdx = getCurrentPageIdx();
+  if (dx < 0 && currentIdx < PAGE_ORDER.length - 1) {
+    // 左スワイプ → 次のページ
+    switchPage(PAGE_ORDER[currentIdx + 1]);
+    showSwipeHint('→ ' + getPageName(PAGE_ORDER[currentIdx + 1]));
+  } else if (dx > 0 && currentIdx > 0) {
+    // 右スワイプ → 前のページ
+    switchPage(PAGE_ORDER[currentIdx - 1]);
+    showSwipeHint('← ' + getPageName(PAGE_ORDER[currentIdx - 1]));
+  }
+}, { passive: true });
+
+function getPageName(id) {
+  return { event: 'イベント', program: 'プログラム', content: '本文' }[id] || '';
+}
+
+function showSwipeHint(text) {
+  const hint = document.getElementById('swipeHint');
+  hint.textContent = text;
+  hint.classList.add('show');
+  setTimeout(() => hint.classList.remove('show'), 600);
+}
+
+function buildSlides() {
+  const result = [];
+  const ITEMS_PER_PAGE = 5;
+
+  if (eventData.title1 || eventData.title2) result.push({ type: 'title' });
+
+  const days = [];
+  let currentDay = { label: '', items: [] };
+  eventData.programs.forEach((p, idx) => {
+    if (p.type === 'day') {
+      if (currentDay.items.length > 0) days.push(currentDay);
+      currentDay = { label: p.label, items: [] };
+    } else {
+      currentDay.items.push(idx);
+    }
+  });
+  if (currentDay.items.length > 0) days.push(currentDay);
+  if (days.length > 1 && days[0].label === '') days[0].label = '1日目';
+
+  days.forEach(day => {
+    const totalPagesInDay = Math.ceil(day.items.length / ITEMS_PER_PAGE);
+    for (let page = 0; page < totalPagesInDay; page++) {
+      result.push({
+        type: 'program', highlightIdx: -1, dayLabel: day.label,
+        page, totalPages: totalPagesInDay, itemIndices: day.items
+      });
+    }
+  });
+
+  if (eventData.theme) result.push({ type: 'theme' });
+
+  eventData.programs.forEach((p, idx) => {
+    if (p.type !== 'item') return;
+    const dayInfo = days.find(d => d.items.includes(idx));
+    if (!dayInfo) return;
+    const positionInDay = dayInfo.items.indexOf(idx);
+    const pageInDay = Math.floor(positionInDay / ITEMS_PER_PAGE);
+    const totalPagesInDay = Math.ceil(dayInfo.items.length / ITEMS_PER_PAGE);
+
+    result.push({
+      type: 'program', highlightIdx: idx, dayLabel: dayInfo.label,
+      page: pageInDay, totalPages: totalPagesInDay, itemIndices: dayInfo.items
+    });
+    result.push({ type: 'chapter', title: p.name });
+    const content = eventData.contents[p.name];
+    if (content && content.trim()) {
+      result.push({ type: 'content', title: p.name, body: content });
+    }
+  });
+
+  return result;
+}
+
+function renderSlide() {
+  const s = slides[currentSlide];
+  const stage = document.getElementById('slideStage');
+  let html = '';
+
+  if (s.type === 'title') {
+    html = `
+      <div class="slide title-slide">
+        <div class="heart-mark">♡</div>
+        <div class="big-title">${applyFurigana(eventData.title1)}</div>
+        <div class="big-title">${applyFurigana(eventData.title2)}</div>
+        ${eventData.date ? `<div class="date">${escapeHtml(eventData.date)}</div>` : ''}
+      </div>
+    `;
+  } else if (s.type === 'theme') {
+    html = `
+      <div class="slide chapter-slide with-accent">
+        <div class="chapter-bar"></div>
+        <div class="chapter-title">${applyFurigana(eventData.theme)}</div>
+      </div>
+    `;
+  } else if (s.type === 'program') {
+    html = renderSlideProgramItem(s);
+  } else if (s.type === 'chapter') {
+    html = `
+      <div class="slide chapter-slide with-accent">
+        <div class="chapter-bar"></div>
+        <div class="chapter-title">〜${applyFurigana(s.title)}〜</div>
+      </div>
+    `;
+  } else if (s.type === 'content') {
+    const lines = s.body.split('\n').filter(l => l.trim());
+    const isList = lines.some(l => /^[・*\-•①-⑨]/.test(l.trim())) || lines.length > 1;
+    let bodyHtml;
+    if (isList) {
+      bodyHtml = '<ul>' + lines.map(l => `<li>${applyFurigana(l.replace(/^[・*\-•①-⑨]\s*/, ''))}</li>`).join('') + '</ul>';
+    } else {
+      bodyHtml = applyFurigana(s.body);
+    }
+    html = `
+      <div class="slide content-slide with-accent">
+        <h2>${applyFurigana(s.title)}</h2>
+        <div class="h2-bar"></div>
+        <div class="body">${bodyHtml}</div>
+      </div>
+    `;
+  }
+
+  stage.innerHTML = html;
+  document.getElementById('counter').textContent = `${currentSlide + 1} / ${slides.length}`;
+  setupRubyEditing();
+}
+
+function renderSlideProgramItem(s) {
+  const ITEMS_PER_PAGE = 5;
+  const calculated = calculateTimes();
+  const itemIndices = s.itemIndices || [];
+  const startIdx = (s.page || 0) * ITEMS_PER_PAGE;
+  const endIdx = Math.min(startIdx + ITEMS_PER_PAGE, itemIndices.length);
+
+  let items = '';
+  for (let i = startIdx; i < endIdx; i++) {
+    const absIdx = itemIndices[i];
+    const p = calculated[absIdx];
+    if (!p) continue;
+    const cls = absIdx === s.highlightIdx ? 'program-item highlight' : 'program-item';
+    items += `
+      <div class="${cls}">
+        <div class="time-badge">${escapeHtml(p.timeRange)}</div>
+        <div class="name">${applyFurigana(p.name)}</div>
+      </div>
+    `;
+  }
+
+  const totalPages = s.totalPages || 1;
+  const pageInfo = totalPages > 1
+    ? `<div style="position:absolute;top:24px;right:32px;font-size:clamp(16px, 2vw, 24px);color:var(--gray-3);font-weight:700;">${(s.page || 0) + 1} / ${totalPages}</div>`
+    : '';
+  const daySubtitle = s.dayLabel
+    ? `<div class="day-subtitle">${applyFurigana(s.dayLabel)}</div>`
+    : '';
+
+  return `
+    <div class="slide program-slide with-accent">
+      ${pageInfo}
+      <h2>${applyFurigana(eventData.programTitle || 'プログラム')}</h2>
+      ${daySubtitle}
+      <div class="program-list">${items}</div>
+    </div>
+  `;
+}
+
+function nextSlide() { if (currentSlide < slides.length - 1) { currentSlide++; renderSlide(); } }
+function prevSlide() { if (currentSlide > 0) { currentSlide--; renderSlide(); } }
+
+let editingKanji = '';
+function setupRubyEditing() {
+  document.querySelectorAll('.editable-ruby').forEach(ruby => {
+    ruby.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const kanji = ruby.dataset.kanji;
+      const dict = getDictionary();
+      editingKanji = kanji;
+      document.getElementById('modalKanji').value = kanji;
+      document.getElementById('modalReading').value = dict[kanji] || '';
+      document.getElementById('furiganaModal').classList.add('show');
+    });
+  });
+}
+function saveFurigana() {
+  const newReading = document.getElementById('modalReading').value.trim();
+  if (newReading) {
+    userDictionary[editingKanji] = newReading;
+    localStorage.setItem('jrc_user_dict', JSON.stringify(userDictionary));
+  }
+  closeModal();
+  renderSlide();
+  showToast('ふりがなを なおしたよ', true);
+}
+function closeModal() { document.getElementById('furiganaModal').classList.remove('show'); }
+document.getElementById('furiganaModal').addEventListener('click', (e) => {
+  if (e.target.id === 'furiganaModal') closeModal();
+});
+
+function escapeHtml(s) {
+  if (s === undefined || s === null) return '';
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+function escapeAttr(s) {
+  if (s === undefined || s === null) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+function showToast(msg, success) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (success ? ' success' : '') + ' show';
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+  else document.exitFullscreen?.();
+}
+
+document.addEventListener('keydown', (e) => {
+  if (!document.getElementById('slideMode').classList.contains('active')) return;
+  if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+  if (e.key === 'ArrowLeft') prevSlide();
+  if (e.key === 'Escape') exitSlides();
+});
+
+['title1','title2','theme','date','programTitle','startTime'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', () => {
+    collectInput();
+    autoSave();
+  });
+});
+
+// プログラム項目内の入力でも自動保存(イベント委譲)
+document.getElementById('programList').addEventListener('input', () => {
+  collectInput();
+  autoSave();
+});
+
+// 退出時(ページ閉じる前)に必ず保存
+window.addEventListener('pagehide', () => saveData(true));
+window.addEventListener('beforeunload', () => saveData(true));
+
+// ============================================================
+// スライド書き出し機能
+// ============================================================
+
+const EXPORT_W = 1280;  // 書き出し幅
+const EXPORT_H = 720;   // 書き出し高さ (16:9)
+
+function openExportModal() {
+  collectInput();
+  const slideList = buildSlides();
+  if (slideList.length === 0) {
+    alert('スライドがまだ作られてないよ。タイトルや項目を入れてから書き出してね');
+    return;
+  }
+  document.getElementById('exportModal').classList.add('show');
+}
+function closeExportModal() {
+  document.getElementById('exportModal').classList.remove('show');
+}
+// モーダル背景タップで閉じる
+document.getElementById('exportModal').addEventListener('click', (e) => {
+  if (e.target.id === 'exportModal') closeExportModal();
+});
+
+function showProgress(text, pct) {
+  const p = document.getElementById('exportProgress');
+  p.classList.add('show');
+  document.getElementById('exportProgressText').textContent = text;
+  document.getElementById('exportProgressFill').style.width = (pct || 0) + '%';
+}
+function updateProgress(text, pct) {
+  document.getElementById('exportProgressText').textContent = text;
+  document.getElementById('exportProgressFill').style.width = pct + '%';
+}
+function hideProgress() {
+  document.getElementById('exportProgress').classList.remove('show');
+}
+
+// 書き出し用の隠しコンテナを作って、固定サイズでスライドをレンダリング
+function createExportContainer() {
+  const c = document.createElement('div');
+  c.style.cssText = `
+    position: fixed; left: -99999px; top: 0;
+    width: ${EXPORT_W}px; height: ${EXPORT_H}px;
+    background: white;
+    z-index: -1;
+    overflow: hidden;
+  `;
+  document.body.appendChild(c);
+  return c;
+}
+
+// 1スライド分のHTML文字列を生成(renderSlideのロジック流用、innerHTMLに入れる前のHTML)
+function buildSlideHTML(s) {
+  if (s.type === 'title') {
+    return `
+      <div class="slide title-slide">
+        <div class="heart-mark">♡</div>
+        <div class="big-title">${applyFurigana(eventData.title1)}</div>
+        <div class="big-title">${applyFurigana(eventData.title2)}</div>
+        ${eventData.date ? `<div class="date">${escapeHtml(eventData.date)}</div>` : ''}
+      </div>`;
+  } else if (s.type === 'theme') {
+    return `
+      <div class="slide chapter-slide with-accent">
+        <div class="chapter-bar"></div>
+        <div class="chapter-title">${applyFurigana(eventData.theme)}</div>
+      </div>`;
+  } else if (s.type === 'program') {
+    return renderSlideProgramItem(s);
+  } else if (s.type === 'chapter') {
+    return `
+      <div class="slide chapter-slide with-accent">
+        <div class="chapter-bar"></div>
+        <div class="chapter-title">〜${applyFurigana(s.title)}〜</div>
+      </div>`;
+  } else if (s.type === 'content') {
+    const lines = s.body.split('\n').filter(l => l.trim());
+    const isList = lines.some(l => /^[・*\-•①-⑨]/.test(l.trim())) || lines.length > 1;
+    let bodyHtml;
+    if (isList) {
+      bodyHtml = '<ul>' + lines.map(l => `<li>${applyFurigana(l.replace(/^[・*\-•①-⑨]\s*/, ''))}</li>`).join('') + '</ul>';
+    } else {
+      bodyHtml = applyFurigana(s.body);
+    }
+    return `
+      <div class="slide content-slide with-accent">
+        <h2>${applyFurigana(s.title)}</h2>
+        <div class="h2-bar"></div>
+        <div class="body">${bodyHtml}</div>
+      </div>`;
+  }
+  return '';
+}
+
+// スライド1枚をcanvas化
+async function renderSlideToCanvas(s, container) {
+  container.innerHTML = buildSlideHTML(s);
+  // フォント読込み待ち & ペイント反映待ち
+  if (document.fonts && document.fonts.ready) {
+    await document.fonts.ready;
+  }
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const canvas = await html2canvas(container, {
+    width: EXPORT_W,
+    height: EXPORT_H,
+    scale: 2,           // 高画質化(2倍解像度)
+    backgroundColor: '#ffffff',
+    useCORS: true,
+    logging: false,
+    windowWidth: EXPORT_W,
+    windowHeight: EXPORT_H
+  });
+  return canvas;
+}
+
+// メインの書き出しエントリ
+async function exportSlides(format) {
+  closeExportModal();
+  collectInput();
+  const slideList = buildSlides();
+  if (slideList.length === 0) return;
+
+  showProgress('準備中…', 0);
+  const container = createExportContainer();
+
+  try {
+    if (format === 'png' || format === 'jpeg') {
+      await exportAsImages(slideList, container, format);
+    } else if (format === 'pdf') {
+      await exportAsPDF(slideList, container);
+    } else if (format === 'pptx-image') {
+      await exportAsImagePPTX(slideList, container);
+    } else if (format === 'pptx-edit') {
+      await exportAsEditablePPTX(slideList);
+    }
+    hideProgress();
+    showToast('書き出し完了!');
+  } catch (err) {
+    console.error(err);
+    hideProgress();
+    alert('書き出しに失敗したよ\n' + (err && err.message ? err.message : err));
+  } finally {
+    if (container.parentNode) container.parentNode.removeChild(container);
+  }
+}
+
+// 画像 (PNG / JPEG) → ZIP
+async function exportAsImages(slideList, container, format) {
+  const zip = new JSZip();
+  const ext = format === 'jpeg' ? 'jpg' : 'png';
+  const mime = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+  const quality = format === 'jpeg' ? 0.92 : undefined;
+
+  for (let i = 0; i < slideList.length; i++) {
+    updateProgress(`画像にしてる… ${i + 1}/${slideList.length}`, (i / slideList.length) * 90);
+    const canvas = await renderSlideToCanvas(slideList[i], container);
+    const dataUrl = canvas.toDataURL(mime, quality);
+    const base64 = dataUrl.split(',')[1];
+    const filename = `slide_${String(i + 1).padStart(2, '0')}.${ext}`;
+    zip.file(filename, base64, { base64: true });
+  }
+
+  updateProgress('ZIPにまとめてる…', 95);
+  const blob = await zip.generateAsync({ type: 'blob' });
+  downloadBlob(blob, `${getFileBaseName()}_${format}.zip`);
+}
+
+// PDF
+async function exportAsPDF(slideList, container) {
+  const { jsPDF } = window.jspdf;
+  // 16:9 横向き、A4基準だと文字小さくなるから幅を独自指定
+  const pdf = new jsPDF({
+    orientation: 'landscape',
+    unit: 'pt',
+    format: [EXPORT_W, EXPORT_H]
+  });
+
+  for (let i = 0; i < slideList.length; i++) {
+    updateProgress(`PDFを作ってる… ${i + 1}/${slideList.length}`, (i / slideList.length) * 95);
+    const canvas = await renderSlideToCanvas(slideList[i], container);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    if (i > 0) pdf.addPage([EXPORT_W, EXPORT_H], 'landscape');
+    pdf.addImage(dataUrl, 'JPEG', 0, 0, EXPORT_W, EXPORT_H);
+  }
+
+  pdf.save(`${getFileBaseName()}.pdf`);
+}
+
+// 画像PPTX(各スライドを画像として貼る)
+async function exportAsImagePPTX(slideList, container) {
+  const pptx = new PptxGenJS();
+  pptx.layout = 'LAYOUT_WIDE'; // 13.33 x 7.5 inch (16:9)
+
+  for (let i = 0; i < slideList.length; i++) {
+    updateProgress(`PPTXを作ってる… ${i + 1}/${slideList.length}`, (i / slideList.length) * 95);
+    const canvas = await renderSlideToCanvas(slideList[i], container);
+    const dataUrl = canvas.toDataURL('image/png');
+    const slide = pptx.addSlide();
+    slide.background = { color: 'FFFFFF' };
+    slide.addImage({
+      data: dataUrl,
+      x: 0, y: 0,
+      w: 13.33, h: 7.5
+    });
+  }
+
+  await pptx.writeFile({ fileName: `${getFileBaseName()}_image.pptx` });
+}
+
+// 構造PPTX(編集可能なテキスト/図形として)
+async function exportAsEditablePPTX(slideList) {
+  const pptx = new PptxGenJS();
+  pptx.layout = 'LAYOUT_WIDE';
+
+  // テーマ色をHEX(#なし)で取得
+  const themeId = eventData.themeStyle || 'simple';
+  const themeColors = {
+    simple:    { primary: 'D4001A', accent: 'FFE0E5', bg: 'FFFFFF' },
+    soubetsu:  { primary: 'E8889A', accent: 'FFE8EE', bg: 'FFF8FA' },
+    christmas: { primary: 'C8102E', accent: '2D8F3A', bg: 'FFF8F5' },
+    shinnen:   { primary: 'B8860B', accent: 'C8102E', bg: 'FFFBF0' },
+    mtc:       { primary: '2196D4', accent: 'FF8C42', bg: 'E6F4FC' },
+    kangei:    { primary: 'C9A8E0', accent: 'FFD700', bg: 'F8F3FC' }
+  };
+  const theme = themeColors[themeId] || themeColors.simple;
+
+  for (let i = 0; i < slideList.length; i++) {
+    updateProgress(`PPTXを作ってる… ${i + 1}/${slideList.length}`, (i / slideList.length) * 95);
+    const s = slideList[i];
+    const slide = pptx.addSlide();
+    slide.background = { color: theme.bg };
+
+    if (s.type === 'title') {
+      // 上下バー
+      slide.addShape('rect', { x: 0, y: 0, w: 13.33, h: 0.08, fill: { color: theme.primary }, line: { type: 'none' } });
+      slide.addShape('rect', { x: 0, y: 7.42, w: 13.33, h: 0.08, fill: { color: theme.primary }, line: { type: 'none' } });
+      // 大タイトル
+      slide.addText(stripFurigana(eventData.title1) || ' ', {
+        x: 0.5, y: 2.0, w: 12.33, h: 1.5,
+        fontSize: 60, bold: true, color: '1A1A1A', align: 'center', fontFace: 'BIZ UDPGothic'
+      });
+      slide.addText(stripFurigana(eventData.title2) || ' ', {
+        x: 0.5, y: 3.6, w: 12.33, h: 1.5,
+        fontSize: 60, bold: true, color: '1A1A1A', align: 'center', fontFace: 'BIZ UDPGothic'
+      });
+      if (eventData.date) {
+        slide.addText(eventData.date, {
+          x: 0.5, y: 6.5, w: 12.33, h: 0.5,
+          fontSize: 24, color: '6C6C70', align: 'center', fontFace: 'BIZ UDPGothic'
+        });
+      }
+    } else if (s.type === 'theme') {
+      slide.addShape('rect', { x: 0, y: 0, w: 13.33, h: 0.08, fill: { color: theme.primary }, line: { type: 'none' } });
+      slide.addShape('rect', { x: 0, y: 7.42, w: 13.33, h: 0.08, fill: { color: theme.primary }, line: { type: 'none' } });
+      slide.addText(stripFurigana(eventData.theme) || ' ', {
+        x: 0.5, y: 3.0, w: 12.33, h: 1.5,
+        fontSize: 64, bold: true, color: '1A1A1A', align: 'center', fontFace: 'BIZ UDPGothic'
+      });
+    } else if (s.type === 'chapter') {
+      slide.addShape('rect', { x: 0, y: 0, w: 13.33, h: 0.08, fill: { color: theme.primary }, line: { type: 'none' } });
+      slide.addShape('rect', { x: 0, y: 7.42, w: 13.33, h: 0.08, fill: { color: theme.primary }, line: { type: 'none' } });
+      slide.addText('〜' + stripFurigana(s.title) + '〜', {
+        x: 0.5, y: 3.0, w: 12.33, h: 1.5,
+        fontSize: 64, bold: true, color: '1A1A1A', align: 'center', fontFace: 'BIZ UDPGothic'
+      });
+    } else if (s.type === 'program') {
+      // タイトル
+      slide.addText(stripFurigana(eventData.programTitle || 'プログラム'), {
+        x: 0.5, y: 0.4, w: 12.33, h: 0.8,
+        fontSize: 36, bold: true, color: theme.primary, align: 'center', fontFace: 'BIZ UDPGothic'
+      });
+      if (s.dayLabel) {
+        slide.addText(s.dayLabel, {
+          x: 0.5, y: 1.2, w: 12.33, h: 0.5,
+          fontSize: 20, color: '6C6C70', align: 'center', fontFace: 'BIZ UDPGothic'
+        });
+      }
+      // テーブル形式で項目並べる
+      const items = s.itemIndices.map(i => eventData.programs[i]);
+      const ITEMS_PER_PAGE = 5;
+      const start = s.page * ITEMS_PER_PAGE;
+      const slice = items.slice(start, start + ITEMS_PER_PAGE);
+      const startTime = parseTime(eventData.startTime || '09:30');
+      // 当該ページの開始時刻を計算(addMinutesで累積)
+      let cursor = { h: startTime.h, m: startTime.m };
+      const allBefore = items.slice(0, start);
+      allBefore.forEach(it => { cursor = addMinutes(cursor, it.minutes || 0); });
+      const rowH = 0.85;
+      const tableY = 2.0;
+      slice.forEach((p, idx) => {
+        const isHi = (s.itemIndices[start + idx] === s.highlightIdx);
+        const startStr = formatTime(cursor);
+        const endCursor = addMinutes(cursor, p.minutes || 0);
+        const endStr = formatTime(endCursor);
+        cursor = endCursor;
+        const y = tableY + idx * rowH;
+        if (isHi) {
+          slide.addShape('rect', {
+            x: 1.2, y: y - 0.05, w: 10.93, h: rowH,
+            fill: { color: theme.accent }, line: { color: theme.primary, width: 3 }
+          });
+        }
+        slide.addText(`${startStr} 〜 ${endStr}`, {
+          x: 1.4, y: y, w: 3.5, h: rowH - 0.1,
+          fontSize: 22, color: theme.primary, bold: true, valign: 'middle', fontFace: 'BIZ UDPGothic'
+        });
+        slide.addText(stripFurigana(p.name), {
+          x: 5.0, y: y, w: 7.0, h: rowH - 0.1,
+          fontSize: 26, color: '1A1A1A', bold: isHi, valign: 'middle', fontFace: 'BIZ UDPGothic'
+        });
+      });
+    } else if (s.type === 'content') {
+      slide.addShape('rect', { x: 0, y: 0, w: 13.33, h: 0.08, fill: { color: theme.primary }, line: { type: 'none' } });
+      slide.addShape('rect', { x: 0, y: 7.42, w: 13.33, h: 0.08, fill: { color: theme.primary }, line: { type: 'none' } });
+      slide.addText(stripFurigana(s.title), {
+        x: 0.5, y: 0.5, w: 12.33, h: 0.9,
+        fontSize: 40, bold: true, color: theme.primary, fontFace: 'BIZ UDPGothic'
+      });
+      slide.addShape('rect', { x: 0.5, y: 1.5, w: 3.5, h: 0.06, fill: { color: theme.primary }, line: { type: 'none' } });
+
+      const lines = s.body.split('\n').filter(l => l.trim());
+      const isList = lines.some(l => /^[・*\-•①-⑨]/.test(l.trim())) || lines.length > 1;
+      if (isList) {
+        const items = lines.map(l => ({
+          text: stripFurigana(l.replace(/^[・*\-•①-⑨]\s*/, '')),
+          options: { bullet: { code: '25A0' }, color: '1A1A1A', fontSize: 28, fontFace: 'BIZ UDPGothic' }
+        }));
+        slide.addText(items, {
+          x: 0.7, y: 2.0, w: 12.0, h: 5.0,
+          paraSpaceAfter: 8
+        });
+      } else {
+        slide.addText(stripFurigana(s.body), {
+          x: 0.7, y: 2.0, w: 12.0, h: 5.0,
+          fontSize: 32, color: '1A1A1A', fontFace: 'BIZ UDPGothic'
+        });
+      }
+    }
+  }
+
+  await pptx.writeFile({ fileName: `${getFileBaseName()}_edit.pptx` });
+}
+
+// ふりがな(<ruby>タグ)を取り除いて漢字だけにする(構造PPTX用)
+function stripFurigana(text) {
+  if (!text) return '';
+  // applyFuriganaは <ruby>漢字<rt>かな</rt></ruby> を生成するから、まずタグ除去
+  return String(text).replace(/<rt>.*?<\/rt>/g, '').replace(/<\/?ruby[^>]*>/g, '').replace(/<[^>]+>/g, '');
+}
+
+function getFileBaseName() {
+  const name = (eventData.title2 || eventData.title1 || 'slide').replace(/[\\/:*?"<>|]/g, '_').slice(0, 40);
+  return name || 'slide';
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+loadData();
+</script>
+
+</body>
+</html>
