@@ -801,6 +801,7 @@
     -webkit-appearance: none;
   }
   .day-card input:focus { outline: none; box-shadow: 0 0 0 2px var(--red-soft); }
+  .day-card input.day-start { flex: 0 0 auto; width: 96px; font-weight: 600; }
   .day-card .del-btn {
     width: 28px; height: 28px;
     border: none;
@@ -2307,7 +2308,8 @@ function loadCustomThemes() {
   } catch(e) { customThemes = []; }
 }
 function saveCustomThemes() {
-  try { localStorage.setItem(CUSTOM_THEMES_KEY, JSON.stringify(customThemes)); } catch(e) {}
+  try { localStorage.setItem(CUSTOM_THEMES_KEY, JSON.stringify(customThemes)); }
+  catch(e) { console.error('スタイルの保存に失敗:', e); showToast('スタイルの保存に失敗しました', false); }
 }
 function findCustomTheme(id) {
   return customThemes.find(t => t.id === id);
@@ -2807,10 +2809,17 @@ function saveData(silent) {
 
 // 自動保存(入力変更時に呼ぶ)
 let autoSaveTimer = null;
+let autoSaveFailedNotified = false;
 function autoSave() {
   if (autoSaveTimer) clearTimeout(autoSaveTimer);
   autoSaveTimer = setTimeout(() => {
-    saveData(true); // silent=true で通知出さない
+    const ok = saveData(true); // 成功時は通知出さない
+    if (!ok && !autoSaveFailedNotified) {
+      autoSaveFailedNotified = true;
+      showToast('自動保存に失敗しました。書き出しで控えを取ってください', false);
+    } else if (ok) {
+      autoSaveFailedNotified = false;
+    }
   }, 800);
 }
 
@@ -2862,8 +2871,13 @@ function collectInput() {
   eventData.programs = [];
   items.forEach(el => {
     if (el.classList.contains('day-card')) {
-      const label = el.querySelector('input').value.trim();
-      if (label) eventData.programs.push({ type: 'day', label });
+      const label = el.querySelector('.day-label').value.trim();
+      const dayStart = el.querySelector('.day-start').value;
+      if (label) {
+        const day = { type: 'day', label };
+        if (dayStart) day.startTime = dayStart;
+        eventData.programs.push(day);
+      }
     } else {
       const name = el.querySelector('.name-input').value.trim();
       const minutes = parseInt(el.querySelector('.min-input').value) || 0;
@@ -2895,7 +2909,8 @@ function calculateTimes() {
   let currentDayLabel = '';
   return eventData.programs.map(p => {
     if (p.type === 'day') {
-      current = { ...startTimeBase };
+      // 日ごとの開始時刻があればそれを使い、なければ全体の開始時刻
+      current = p.startTime ? parseTime(p.startTime) : { ...startTimeBase };
       currentDayLabel = p.label;
       return { ...p, dayLabel: p.label };
     }
@@ -2936,7 +2951,7 @@ function renderProgramList() {
   let itemCountInDay = 0;
   eventData.programs.forEach((p) => {
     if (p.type === 'day') {
-      list.appendChild(createDayDivider(p.label));
+      list.appendChild(createDayDivider(p.label, p.startTime));
       itemCountInDay = 0;
     } else {
       if (itemCountInDay > 0 && itemCountInDay % 5 === 0) {
@@ -2974,18 +2989,20 @@ function createProgramRow(minutes, name) {
   return card;
 }
 
-function createDayDivider(label) {
+function createDayDivider(label, startTime) {
   const div = document.createElement('div');
   div.className = 'day-card';
   div.innerHTML = `
     <span class="day-icon">📅</span>
-    <input type="text" value="${escapeAttr(label)}" placeholder="例: 2日目">
+    <input type="text" class="day-label" value="${escapeAttr(label)}" placeholder="例: 2日目">
+    <input type="time" class="day-start" value="${escapeAttr(startTime || '')}" title="この日の開始時刻(空なら全体の開始時刻)">
     <button class="del-btn" onclick="removeRow(this)">×</button>
   `;
-  div.querySelector('input').addEventListener('input', () => {
+  div.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => {
     collectInput();
     updateCalculatedTimes();
-  });
+    autoSave();
+  }));
   return div;
 }
 
@@ -3397,7 +3414,15 @@ function saveFurigana() {
   const newReading = document.getElementById('modalReading').value.trim();
   if (newReading) {
     userDictionary[editingKanji] = newReading;
-    localStorage.setItem('jrc_user_dict', JSON.stringify(userDictionary));
+    try {
+      localStorage.setItem('jrc_user_dict', JSON.stringify(userDictionary));
+    } catch(e) {
+      console.error('辞書の保存に失敗:', e);
+      closeModal();
+      renderSlide();
+      showToast('ふりがなの保存に失敗しました', false);
+      return;
+    }
   }
   closeModal();
   renderSlide();
@@ -3782,19 +3807,15 @@ async function exportAsEditablePPTX(slideList) {
       const ITEMS_PER_PAGE = 5;
       const start = s.page * ITEMS_PER_PAGE;
       const slice = items.slice(start, start + ITEMS_PER_PAGE);
-      const startTime = parseTime(eventData.startTime || '09:30');
-      // 当該ページの開始時刻を計算(addMinutesで累積)
-      let cursor = { h: startTime.h, m: startTime.m };
-      const allBefore = items.slice(0, start);
-      allBefore.forEach(it => { cursor = addMinutes(cursor, it.minutes || 0); });
+      // 時刻は画面表示と同じ calculateTimes() の結果を使う(日ごとの開始時刻に対応)
+      const calcTimes = calculateTimes();
       const rowH = 0.85;
       const tableY = 2.0;
       slice.forEach((p, idx) => {
         const isHi = (s.itemIndices[start + idx] === s.highlightIdx);
-        const startStr = formatTime(cursor);
-        const endCursor = addMinutes(cursor, p.minutes || 0);
-        const endStr = formatTime(endCursor);
-        cursor = endCursor;
+        const calc = calcTimes[s.itemIndices[start + idx]];
+        const startStr = calc.startStr;
+        const endStr = calc.endStr;
         const y = tableY + idx * rowH;
         if (isHi) {
           slide.addShape('rect', {
